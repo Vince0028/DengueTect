@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Login - DengueTect{% endblock %}
+{% block content %}
+  <div class="card center">
+    <div class="text-center">
+      <img src="/images/dengue-logo.png" alt="DengueTect Logo" class="logo-large" />
+      <h1>DengueTect</h1>
+      <p class="muted">AI-Powered Dengue Pre-Screening</p>
+    </div>
+    <form action="/login" method="post" class="form">
+      <label>Email</label>
+      <input type="email" name="email" placeholder="Enter your email" required />
+
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Enter your password" required />
+
+      <button type="submit" class="btn primary">Sign In</button>
+    </form>
+
+    <div class="divider">Or continue as</div>
+    <a class="btn outline" href="/dashboard">Guest Mode</a>
+  </div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Settings - DengueTect{% endblock %}
+{% block content %}
+  <a class="btn linkback" href="javascript:history.back()">← Back</a>
+  <h2 class="page-title">Settings</h2>
+
+  <div class="card">
+    <h3 class="card-title">Appearance</h3>
+    <div class="row between">
+      <div>
+        <p class="strong">Dark Mode</p>
+        <p class="muted">Switch between light and dark themes</p>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="toggle-dark" />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Notifications</h3>
+    <div class="row between">
+      <div>
+        <p class="strong">Health Reminders</p>
+        <p class="muted">Get notified about dengue prevention tips</p>
+      </div>
+      <label class="switch"><input type="checkbox" checked /><span class="slider"></span></label>
+    </div>
+    <div class="row between">
+      <div>
+        <p class="strong">Risk Alerts</p>
+        <p class="muted">Receive alerts for high-risk assessments</p>
+      </div>
+      <label class="switch"><input type="checkbox" checked /><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Privacy & Permissions</h3>
+    <div class="row between">
+      <div class="row gap">
+        <div>📷</div>
+        <div>
+          <p class="strong">Camera Access</p>
+          <p class="muted">For bite photo analysis</p>
+        </div>
+      </div>
+      <label class="switch"><input type="checkbox" checked /><span class="slider"></span></label>
+    </div>
+    <div class="row between">
+      <div class="row gap">
+        <div>📍</div>
+        <div>
+          <p class="strong">Location Access</p>
+          <p class="muted">Find nearby health centers</p>
+        </div>
+      </div>
+      <label class="switch"><input type="checkbox" checked /><span class="slider"></span></label>
+    </div>
+    <div class="row between">
+      <div>
+        <p class="strong">Data Sharing</p>
+        <p class="muted">Anonymous data for public health</p>
+      </div>
+      <label class="switch"><input type="checkbox" /><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Language & Region</h3>
+    <div class="stack">
+      <a class="btn outline" href="#">Language: English</a>
+      <a class="btn outline" href="#">Region: Philippines</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">About</h3>
+    <div class="stack">
+      <a class="btn outline" href="#">Privacy Policy</a>
+      <a class="btn outline" href="#">Terms of Service</a>
+      <span class="muted">App Version: 1.0.0</span>
+    </div>
+  </div>
+
+  <script>
+    const toggle = document.getElementById('toggle-dark');
+    toggle.addEventListener('change', (e) => {
+      document.documentElement.classList.toggle('dark', e.target.checked);
+    });
+  </script>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Report a Bite - DengueTect{% endblock %}
+{% block content %}
+  <a class="btn linkback" href="/dashboard">← Back</a>
+  <h2 class="page-title">Report a Bite</h2>
+
+  <div class="card">
+    <h3 class="card-title">Upload Bite Photo</h3>
+    <p class="muted">Take or upload a clear photo of the suspected mosquito bite for AI analysis</p>
+
+    <div class="uploader">
+      <input id="upload-input" type="file" accept="image/*" />
+      <label for="upload-input" class="btn outline">Choose Photo</label>
+    </div>
+
+    <div id="preview" class="preview hidden">
+      <img id="preview-img" alt="Uploaded bite" />
+      <div class="row gap">
+        <button class="btn outline" id="btn-retake">Retake</button>
+        <a class="btn primary" href="/bite-analysis-result" id="btn-analyze">Analyze Bite</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Tips for Best Results</h3>
+    <ul class="list small">
+      <li>Ensure good lighting</li>
+      <li>Keep the bite in focus</li>
+      <li>Include surrounding skin for context</li>
+      <li>Avoid blurry or dark images</li>
+    </ul>
+  </div>
+
+  <script>
+    const input = document.getElementById('upload-input');
+    const preview = document.getElementById('preview');
+    const previewImg = document.getElementById('preview-img');
+    const btnRetake = document.getElementById('btn-retake');
+
+    input.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        previewImg.src = ev.target.result;
+        preview.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    });
+
+    btnRetake.addEventListener('click', (e) => {
+      e.preventDefault();
+      input.value = '';
+      previewImg.src = '';
+      preview.classList.add('hidden');
+    });
+  </script>
+{% endblock %}

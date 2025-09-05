@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Symptom Checker - DengueTect{% endblock %}
+{% block content %}
+  <a class="btn linkback" href="/dashboard">← Back</a>
+  <h2 class="page-title">Symptom Checker</h2>
+
+  <div class="card">
+    <h3 class="card-title">Are you experiencing these symptoms?</h3>
+    <p class="muted">Select if you are currently experiencing or have experienced these in the past 7 days.</p>
+
+    <form action="/risk-assessment" method="get" class="stack">
+      <div class="checklist">
+        <label><input type="checkbox" name="symptoms" value="fever" /> High fever (above 38°C)</label>
+        <label><input type="checkbox" name="symptoms" value="headache" /> Severe headache</label>
+        <label><input type="checkbox" name="symptoms" value="eye-pain" /> Pain behind the eyes</label>
+        <label><input type="checkbox" name="symptoms" value="muscle-pain" /> Muscle pain</label>
+        <label><input type="checkbox" name="symptoms" value="joint-pain" /> Joint pain</label>
+        <label><input type="checkbox" name="symptoms" value="nausea" /> Nausea or vomiting</label>
+        <label><input type="checkbox" name="symptoms" value="rash" /> Skin rash</label>
+        <label><input type="checkbox" name="symptoms" value="fatigue" /> Extreme tiredness</label>
+        <label><input type="checkbox" name="symptoms" value="loss-appetite" /> Loss of appetite</label>
+        <label><input type="checkbox" name="symptoms" value="abdominal-pain" /> Abdominal pain</label>
+      </div>
+      <button class="btn primary" type="submit">Complete Assessment</button>
+    </form>
+  </div>
+{% endblock %}

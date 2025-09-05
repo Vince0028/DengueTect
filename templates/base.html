@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}DengueTect{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <img src="/images/dengue-logo.png" alt="DengueTect" class="brand-logo" />
+          <div>
+            <div class="brand-title">DengueTect</div>
+            <div class="brand-sub">Health Monitoring</div>
+          </div>
+        </div>
+        <nav class="nav">
+          <a href="/dashboard">Dashboard</a>
+          <a href="/education">Education</a>
+          <a href="/profile">Profile</a>
+          <a href="/settings">Settings</a>
+          <a href="/">Logout</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="container footer">
+      <small>&copy; {{ 2025 }} DengueTect</small>
+    </footer>
+  </body>
+</html>

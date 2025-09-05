@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - DengueTect{% endblock %}
+{% block content %}
+  <h2 class="page-title">Welcome to DengueTect</h2>
+  <p class="muted text-center">Your AI-powered dengue pre-screening companion</p>
+
+  <div class="grid">
+    <a href="/report-bite" class="card link">
+      <div class="icon-box">📷</div>
+      <div class="card-body">
+        <h3>Report a Bite</h3>
+        <p>Take and upload a photo of a suspected mosquito bite for AI analysis</p>
+      </div>
+      <div class="chev">›</div>
+    </a>
+
+    <a href="/symptom-checker" class="card link">
+      <div class="icon-box">📝</div>
+      <div class="card-body">
+        <h3>Symptom Checker</h3>
+        <p>Complete our comprehensive symptom assessment</p>
+      </div>
+      <div class="chev">›</div>
+    </a>
+
+    <a href="/risk-assessment" class="card link">
+      <div class="icon-box">📈</div>
+      <div class="card-body">
+        <h3>Risk Assessment</h3>
+        <p>View your current dengue risk level and recommendations</p>
+      </div>
+      <div class="chev">›</div>
+    </a>
+  </div>
+
+  <h3 class="section-title">Educational Hub</h3>
+  <div class="grid small">
+    <a href="/education" class="card link">
+      <div class="icon-box">📚</div>
+      <div class="card-body">
+        <h4>What is Dengue?</h4>
+        <p>Learn about dengue fever, symptoms, and prevention</p>
+      </div>
+      <div class="chev">›</div>
+    </a>
+    <a href="/education" class="card link">
+      <div class="icon-box">📍</div>
+      <div class="card-body">
+        <h4>Local Health Services</h4>
+        <p>Find nearby healthcare facilities and emergency contacts</p>
+      </div>
+      <div class="chev">›</div>
+    </a>
+  </div>
+{% endblock %}

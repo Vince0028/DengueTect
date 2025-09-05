@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Risk Assessment - DengueTect{% endblock %}
+{% block content %}
+  <a class="btn linkback" href="/dashboard">← Back</a>
+  <h2 class="page-title">Risk Assessment</h2>
+
+  {% set colors = {'low':'green', 'moderate':'orange', 'high':'red'} %}
+  {% set color = colors.get(current_risk, 'gray') %}
+
+  <div class="card center">
+    <h3 class="card-title">Current Risk: <span class="badge {{ color }}">{{ current_risk|capitalize }} Risk</span></h3>
+    <p class="muted">Based on your symptoms and bite analysis</p>
+
+    {% set risk_percentage = risk_levels[current_risk] %}
+    <div class="circle">
+      <svg viewBox="0 0 36 36">
+        <path class="bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        <path class="fg {{ color }}" stroke-dasharray="{{ risk_percentage }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+      </svg>
+      <div class="circle-center {{ color }}">{{ risk_percentage }}%</div>
+    </div>
+
+    {% if current_risk == 'low' %}
+      <p class="text">The bite and symptoms show minimal signs of dengue infection. Continue monitoring your condition and practice standard mosquito prevention.</p>
+    {% elif current_risk == 'moderate' %}
+      <p class="text">Some signs suggest the possibility of dengue infection. Monitor your symptoms closely over the next 24-48 hours. If new symptoms appear or worsen, consider seeking medical advice.</p>
+    {% elif current_risk == 'high' %}
+      <p class="text">There is a strong indication of potential dengue infection. You are advised to seek medical attention, especially if you experience fever, severe headache, or body pain.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Risk Breakdown</h3>
+    <div class="progress-row">
+      <span>Low Risk</span>
+      <div class="bar"><span class="bar-fill green" style="width: {{ risk_levels.low }}%"></span></div>
+      <span class="pct green">{{ risk_levels.low }}%</span>
+    </div>
+    <div class="progress-row">
+      <span>Moderate Risk</span>
+      <div class="bar"><span class="bar-fill orange" style="width: {{ risk_levels.moderate }}%"></span></div>
+      <span class="pct orange">{{ risk_levels.moderate }}%</span>
+    </div>
+    <div class="progress-row">
+      <span>High Risk</span>
+      <div class="bar"><span class="bar-fill red" style="width: {{ risk_levels.high }}%"></span></div>
+      <span class="pct red">{{ risk_levels.high }}%</span>
+    </div>
+  </div>
+
+  {% if current_risk != 'low' %}
+  <div class="card">
+    <h3 class="card-title">Recommended Actions</h3>
+    <div class="stack">
+      <a class="btn outline" href="tel:911">Call Emergency Hotline: 911</a>
+      <a class="btn outline" href="#">Find Nearest Hospital</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h3 class="card-title">What's Next?</h3>
+    <div class="stack">
+      <a class="btn primary" href="/symptom-checker">Retake Assessment</a>
+      <a class="btn outline" href="/education">Learn More About Dengue</a>
+    </div>
+  </div>
+{% endblock %}

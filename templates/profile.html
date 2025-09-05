@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Profile - DengueTect{% endblock %}
+{% block content %}
+  <a class="btn linkback" href="javascript:history.back()">← Back</a>
+  <h2 class="page-title">Profile / User Settings</h2>
+
+  <div class="card">
+    <h3 class="card-title">Personal Information</h3>
+    <div class="row gap">
+      <img src="/placeholder-user.jpg" alt="User" class="avatar" />
+      <div>
+        <div class="badge">Dengue Slayer</div>
+      </div>
+    </div>
+    <form class="form stack">
+      <label>Email<input type="email" value="juan.delacruz@email.com" /></label>
+      <label>Phone<input type="text" value="+63 912 345 6789" /></label>
+      <label>Location<input type="text" value="Barangay 183 Villamor, Pasay City" /></label>
+      <label>Birthdate<input type="date" value="1990-01-15" /></label>
+      <div class="row gap">
+        <button class="btn primary" type="button">Save Changes</button>
+        <a class="btn outline" href="/">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Security Settings</h3>
+    <form class="form stack">
+      <label>Current Password<input type="password" placeholder="Enter current password" /></label>
+      <label>New Password<input type="password" placeholder="Enter new password" /></label>
+      <label>Confirm New Password<input type="password" placeholder="Confirm new password" /></label>
+      <button class="btn primary" type="button">Change Password</button>
+    </form>
+  </div>
+
+  <a class="btn danger full" href="/">Log out</a>
+{% endblock %}

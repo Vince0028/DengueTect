@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Bite Analysis Result - DengueTect{% endblock %}
+{% block content %}
+  <a class="btn linkback" href="/report-bite">← Back</a>
+  <h2 class="page-title">Bite Analysis Result</h2>
+
+  <div class="card">
+    <p class="muted">This is a simulated result page. In a full implementation, an AI model would analyze the image and provide insights.</p>
+    <div class="result success">
+      <strong>Preliminary Assessment:</strong> No immediate signs of severe reaction detected.
+    </div>
+    <div class="stack">
+      <a class="btn primary" href="/risk-assessment">View Risk Assessment</a>
+      <a class="btn outline" href="/dashboard">Back to Dashboard</a>
+    </div>
+  </div>
+{% endblock %}
