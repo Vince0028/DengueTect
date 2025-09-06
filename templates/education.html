@@ -1,53 +1,25 @@
 {% extends 'base.html' %}
 {% block title %}Education - DengueTect{% endblock %}
 {% block content %}
-  <a class="btn linkback" href="javascript:history.back()">← Back</a>
+  <a class="btn linkback" href="/dashboard">← Back</a>
   <h2 class="page-title">Educational Hub</h2>
-
-  <div class="card">
-    <h3 class="card-title">What is Dengue?</h3>
-    <p>Dengue is a mosquito-borne viral infection that causes flu-like illness and can develop into severe complications.</p>
-    <ul class="pill-list">
-      <li>High Fever</li>
-      <li>Severe Headache</li>
-      <li>Muscle Pain</li>
-      <li>Skin Rash</li>
-    </ul>
-    <div class="stack">
-      <a class="btn outline" href="#">Dengue Prevention Guide</a>
-      <a class="btn outline" href="#">Warning Signs & Symptoms</a>
-      <a class="btn outline" href="#">Community Prevention Tips</a>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3 class="card-title">Prevention Tips</h3>
-    <ul class="list">
-      <li><strong>Remove Standing Water</strong> — Empty containers, flower pots, and gutters regularly.</li>
-      <li><strong>Use Protection</strong> — Wear long sleeves and use mosquito repellent.</li>
-      <li><strong>Peak Hours</strong> — Avoid outdoor activities during dawn and dusk.</li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <h3 class="card-title">Local Health Services</h3>
-    <p>Find nearby healthcare facilities and emergency contacts in your area.</p>
-    <div class="card warning">
-      <h4>Emergency Hotlines</h4>
-      <div class="row between">
-        <span>DOH Hotline:</span>
-        <code>1555</code>
+  <div class="grid small">
+    <a href="/education/what-is-dengue" class="card link">
+      <div class="icon-box">📚</div>
+      <div class="card-body">
+        <h3>What is Dengue?</h3>
+        <p>Facts, symptoms, transmission, and prevention</p>
       </div>
-      <div class="row between">
-        <span>Emergency:</span>
-        <code>911</code>
+      <div class="chev">›</div>
+    </a>
+
+    <a href="/education/local-services" class="card link">
+      <div class="icon-box">📍</div>
+      <div class="card-body">
+        <h3>Local Health Services</h3>
+        <p>Find official directories and emergency contacts</p>
       </div>
-    </div>
-    <div class="stack">
-      <a class="btn outline" href="#">Pasay City General Hospital</a>
-      <a class="btn outline" href="#">Barangay 183 Health Center</a>
-      <a class="btn outline" href="#">Manila Doctors Hospital</a>
-    </div>
-    <a class="btn primary full" href="#">Find More Nearby Facilities</a>
+      <div class="chev">›</div>
+    </a>
   </div>
-{% endblock %}
+ {% endblock %}

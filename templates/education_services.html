@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Local Health Services - DengueTect{% endblock %}
+{% block content %}
+  <a class="btn linkback" href="/dashboard">← Back</a>
+  <h2 class="page-title">Local Health Services</h2>
+
+  <div class="card soft">
+    <h3 class="card-title">Emergency</h3>
+    <p class="muted">If you suspect severe dengue or see warning signs, call your local emergency number immediately. In the Philippines, the national emergency number is 911. Source: <a href="https://www.gov.ph" target="_blank" rel="noopener">Government of the Philippines portal</a>.</p>
+    <div class="stack">
+      <a class="btn danger" href="tel:911">Call 911</a>
+    </div>
+  </div>
+
+  <div class="card soft">
+    <h3 class="card-title">Find nearby hospitals and clinics</h3>
+    <p class="muted">Use reliable directories or a trusted maps app to locate the nearest emergency department or infectious disease clinic. Verify facility details before you go.</p>
+    <div class="stack">
+      <a class="btn outline" href="https://www.google.com/maps/search/hospital+near+me" target="_blank" rel="noopener">Open hospitals near me</a>
+      <a class="btn outline" href="https://www.who.int/countries" target="_blank" rel="noopener">WHO country offices</a>
+      <a class="btn outline" href="https://www.cdc.gov/dengue/" target="_blank" rel="noopener">CDC dengue resources</a>
+    </div>
+  </div>
+
+  <div class="card soft">
+    <h3 class="card-title">Official references</h3>
+    <ul class="ref-list">
+      <li><a href="https://www.who.int/news-room/fact-sheets/detail/dengue-and-severe-dengue" target="_blank" rel="noopener">WHO, Dengue and severe dengue</a></li>
+      <li><a href="https://www.cdc.gov/dengue/index.html" target="_blank" rel="noopener">CDC, Dengue</a></li>
+      <li><a href="https://www.cdc.gov/dengue/symptoms/index.html" target="_blank" rel="noopener">CDC, Symptoms and treatment</a></li>
+      <li><a href="https://www.cdc.gov/dengue/prevention/index.html" target="_blank" rel="noopener">CDC, Prevention</a></li>
+    </ul>
+  </div>
+
+  <div class="card soft">
+    <h3 class="card-title">Video learning</h3>
+    <p class="muted">Watch short explainers from official public health channels.</p>
+    <ul class="ref-list">
+      <li><a href="https://www.youtube.com/@WHO" target="_blank" rel="noopener">WHO YouTube channel</a></li>
+      <li><a href="https://www.youtube.com/@CDCgov" target="_blank" rel="noopener">CDC YouTube channel</a></li>
+    </ul>
+  </div>
+{% endblock %}

@@ -49,7 +49,7 @@ export default function DashboardPage() {
                 icon={<BookOpen className="h-5 w-5" />}
                 title="What is Dengue?"
                 description="Learn about dengue fever, symptoms, and prevention"
-                href="/education"
+                href="/education#dengue"
                 size="sm"
               />
 
@@ -57,7 +57,7 @@ export default function DashboardPage() {
                 icon={<MapPin className="h-5 w-5" />}
                 title="Local Health Services"
                 description="Find nearby healthcare facilities and emergency contacts"
-                href="/education"
+                href="/education#services"
                 size="sm"
               />
             </div>

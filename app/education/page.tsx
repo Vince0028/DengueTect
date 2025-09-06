@@ -26,7 +26,7 @@ export default function EducationPage() {
 
       <div className="container mx-auto px-4 py-6 max-w-md">
         <div className="flex items-center mb-6">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="mr-3">
+          <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard')} className="mr-3">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Educational Hub</h1>
@@ -34,6 +34,7 @@ export default function EducationPage() {
 
         <div className="space-y-6">
           {/* What is Dengue Section */}
+          <section id="dengue">
           <Card className="border-emerald-200 dark:border-gray-700 dark:bg-gray-800">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center dark:text-white">
@@ -92,6 +93,7 @@ export default function EducationPage() {
               </div>
             </CardContent>
           </Card>
+          </section>
 
           {/* Prevention Tips */}
           <Card className="border-emerald-200 dark:border-gray-700 dark:bg-gray-800">
@@ -135,6 +137,7 @@ export default function EducationPage() {
           </Card>
 
           {/* Local Health Services */}
+          <section id="services">
           <Card className="border-emerald-200 dark:border-gray-700 dark:bg-gray-800">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center dark:text-white">
@@ -211,6 +214,7 @@ export default function EducationPage() {
               </Button>
             </CardContent>
           </Card>
+          </section>
         </div>
       </div>
     </div>

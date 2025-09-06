@@ -1,59 +1,158 @@
 {% extends 'base.html' %}
-{% block title %}Report a Bite - DengueTect{% endblock %}
-{% block content %}
-  <a class="btn linkback" href="/dashboard">← Back</a>
-  <h2 class="page-title">Report a Bite</h2>
+  {% block title %}Report a Bite - DengueTect{% endblock %}
+  {% block content %}
+    <a class="btn linkback" href="/dashboard">← Back</a>
+    <h2 class="page-title">Report a Bite</h2>
 
-  <div class="card">
-    <h3 class="card-title">Upload Bite Photo</h3>
-    <p class="muted">Take or upload a clear photo of the suspected mosquito bite for AI analysis</p>
+    <div class="card soft">
+      <h3 class="card-title">Upload Bite Photo</h3>
+      <p class="muted">Take or upload a clear photo of the suspected mosquito bite for AI analysis</p>
 
-    <div class="uploader">
-      <input id="upload-input" type="file" accept="image/*" />
-      <label for="upload-input" class="btn outline">Choose Photo</label>
-    </div>
+      <div id="dropzone" class="dropzone">
+        <div class="dropzone-inner">
+          <i class="bi bi-camera2 dropzone-icon"></i>
+          <p class="muted">No image selected</p>
+          <small class="muted">Drag & drop a photo here</small>
+        </div>
+        <img id="preview-img" class="dropzone-preview hidden" alt="Preview" />
+      </div>
 
-    <div id="preview" class="preview hidden">
-      <img id="preview-img" alt="Uploaded bite" />
-      <div class="row gap">
+      <div class="stack" style="margin-top:12px">
+        <input id="camera-input" class="hidden-input" type="file" accept="image/*" capture="environment" />
+        <input id="gallery-input" class="hidden-input" type="file" accept="image/*" />
+        <button class="btn primary full" id="btn-camera"><i class="bi bi-camera me-2"></i>Take Photo</button>
+        <button class="btn outline full" id="btn-gallery"><i class="bi bi-upload me-2"></i>Upload from Gallery</button>
+      </div>
+
+      <div id="actions" class="row gap hidden" style="margin-top:12px">
         <button class="btn outline" id="btn-retake">Retake</button>
         <a class="btn primary" href="/bite-analysis-result" id="btn-analyze">Analyze Bite</a>
       </div>
     </div>
-  </div>
 
-  <div class="card">
-    <h3 class="card-title">Tips for Best Results</h3>
-    <ul class="list small">
-      <li>Ensure good lighting</li>
-      <li>Keep the bite in focus</li>
-      <li>Include surrounding skin for context</li>
-      <li>Avoid blurry or dark images</li>
-    </ul>
-  </div>
+    <div class="card soft">
+      <h3 class="card-title">Tips for Best Results</h3>
+      <ul class="list small">
+        <li>Ensure good lighting</li>
+        <li>Keep the bite in focus</li>
+        <li>Include surrounding skin for context</li>
+        <li>Avoid blurry or dark images</li>
+      </ul>
+    </div>
 
-  <script>
-    const input = document.getElementById('upload-input');
-    const preview = document.getElementById('preview');
-    const previewImg = document.getElementById('preview-img');
-    const btnRetake = document.getElementById('btn-retake');
+    <!-- Camera Modal -->
+    <div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Take Photo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <video id="cameraVideo" class="camera-video" autoplay playsinline></video>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn outline" id="btn-cancel-camera" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn primary" id="btn-capture"><i class="bi bi-camera me-2"></i>Capture</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    input.addEventListener('change', (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        previewImg.src = ev.target.result;
-        preview.classList.remove('hidden');
-      };
-      reader.readAsDataURL(file);
-    });
+    <script>
+      const dz = document.getElementById('dropzone');
+      const previewImg = document.getElementById('preview-img');
+      const cameraInput = document.getElementById('camera-input');
+      const galleryInput = document.getElementById('gallery-input');
+      const btnCamera = document.getElementById('btn-camera');
+      const btnGallery = document.getElementById('btn-gallery');
+      const btnRetake = document.getElementById('btn-retake');
+      const actions = document.getElementById('actions');
+      const cameraModalEl = document.getElementById('cameraModal');
+      const cameraVideo = document.getElementById('cameraVideo');
+      const btnCapture = document.getElementById('btn-capture');
+      let modalRef = null;
+      let mediaStream = null;
 
-    btnRetake.addEventListener('click', (e) => {
-      e.preventDefault();
-      input.value = '';
-      previewImg.src = '';
-      preview.classList.add('hidden');
-    });
-  </script>
-{% endblock %}
+      function handleFile(file){
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev)=>{
+          previewImg.src = ev.target.result;
+          previewImg.classList.remove('hidden');
+          dz.classList.add('has-image');
+          actions.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+
+      async function openCamera(){
+        try{
+          if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+            // Fallback to input with capture attr (mobile)
+            cameraInput.click();
+            return;
+          }
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+          cameraVideo.srcObject = mediaStream;
+          if (!modalRef && window.bootstrap && cameraModalEl){ modalRef = new window.bootstrap.Modal(cameraModalEl); }
+          if (modalRef) { modalRef.show(); }
+        }catch(err){
+          // Permission denied or no camera => fallback
+          cameraInput.click();
+        }
+      }
+
+      function stopStream(){
+        if(mediaStream){
+          mediaStream.getTracks().forEach(t=>t.stop());
+          mediaStream = null;
+        }
+      }
+
+      btnCamera.addEventListener('click',(e)=>{e.preventDefault(); openCamera();});
+      btnGallery.addEventListener('click',(e)=>{e.preventDefault(); galleryInput.click();});
+
+      cameraInput.addEventListener('change',(e)=>handleFile(e.target.files && e.target.files[0]));
+      galleryInput.addEventListener('change',(e)=>handleFile(e.target.files && e.target.files[0]));
+
+      // Capture from live camera
+      if (btnCapture){
+        btnCapture.addEventListener('click',()=>{
+          if(!mediaStream) return;
+          const trackSettings = mediaStream.getVideoTracks()[0].getSettings();
+          const w = trackSettings.width || 640;
+          const h = trackSettings.height || 480;
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(cameraVideo, 0, 0, w, h);
+          canvas.toBlob((blob)=>{
+            if(!blob) return;
+            handleFile(new File([blob], 'capture.jpg', { type: 'image/jpeg' }));
+            if (modalRef) { modalRef.hide(); }
+            stopStream();
+          }, 'image/jpeg', 0.92);
+        });
+      }
+
+      cameraModalEl && cameraModalEl.addEventListener('hidden.bs.modal', stopStream);
+
+      dz.addEventListener('dragover',(e)=>{e.preventDefault(); dz.classList.add('drag');});
+      dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+      dz.addEventListener('drop',(e)=>{
+        e.preventDefault(); dz.classList.remove('drag');
+        const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        handleFile(f);
+      });
+
+      btnRetake.addEventListener('click',(e)=>{
+        e.preventDefault();
+        previewImg.src='';
+        previewImg.classList.add('hidden');
+        dz.classList.remove('has-image');
+        actions.classList.add('hidden');
+        cameraInput.value=''; galleryInput.value='';
+      });
+    </script>
+  {% endblock %}

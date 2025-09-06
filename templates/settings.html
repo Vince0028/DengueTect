@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}Settings - DengueTect{% endblock %}
 {% block content %}
-  <a class="btn linkback" href="javascript:history.back()">← Back</a>
+  <a class="btn linkback" href="/dashboard">← Back</a>
   <h2 class="page-title">Settings</h2>
 
-  <div class="card">
-    <h3 class="card-title">Appearance</h3>
+  <div class="card soft">
+    <h3 class="card-title"><i class="bi bi-brightness-high me-2"></i>Appearance</h3>
     <div class="row between">
       <div>
         <p class="strong">Dark Mode</p>
@@ -18,8 +18,8 @@
     </div>
   </div>
 
-  <div class="card">
-    <h3 class="card-title">Notifications</h3>
+  <div class="card soft">
+    <h3 class="card-title"><i class="bi bi-bell me-2"></i>Notifications</h3>
     <div class="row between">
       <div>
         <p class="strong">Health Reminders</p>
@@ -36,8 +36,8 @@
     </div>
   </div>
 
-  <div class="card">
-    <h3 class="card-title">Privacy & Permissions</h3>
+  <div class="card soft">
+    <h3 class="card-title"><i class="bi bi-shield-check me-2"></i>Privacy & Permissions</h3>
     <div class="row between">
       <div class="row gap">
         <div>📷</div>
@@ -67,16 +67,16 @@
     </div>
   </div>
 
-  <div class="card">
-    <h3 class="card-title">Language & Region</h3>
+  <div class="card soft">
+    <h3 class="card-title"><i class="bi bi-geo-alt me-2"></i>Language & Region</h3>
     <div class="stack">
       <a class="btn outline" href="#">Language: English</a>
       <a class="btn outline" href="#">Region: Philippines</a>
     </div>
   </div>
 
-  <div class="card">
-    <h3 class="card-title">About</h3>
+  <div class="card soft">
+    <h3 class="card-title"><i class="bi bi-info-circle me-2"></i>About</h3>
     <div class="stack">
       <a class="btn outline" href="#">Privacy Policy</a>
       <a class="btn outline" href="#">Terms of Service</a>
@@ -85,9 +85,19 @@
   </div>
 
   <script>
-    const toggle = document.getElementById('toggle-dark');
-    toggle.addEventListener('change', (e) => {
-      document.documentElement.classList.toggle('dark', e.target.checked);
-    });
+    (function(){
+      var el = document.documentElement;
+      var checkbox = document.getElementById('toggle-dark');
+      var current = el.getAttribute('data-theme') || 'light';
+      checkbox.checked = current === 'dark';
+      function setTheme(next){
+        el.setAttribute('data-theme', next);
+        try{localStorage.setItem('theme', next);}catch(e){}
+        try{document.cookie = 'theme=' + next + '; path=/; max-age=31536000';}catch(e){}
+      }
+      checkbox.addEventListener('change', function(e){
+        setTheme(e.target.checked ? 'dark' : 'light');
+      });
+    })();
   </script>
 {% endblock %}
