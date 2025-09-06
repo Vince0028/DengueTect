@@ -85,6 +85,11 @@ main.container{flex:1 0 auto}
 .dropzone-preview{max-width:100%;max-height:320px;border-radius:10px;display:block}
 .dropzone-preview.hidden{display:none}
 .dropzone.has-image .dropzone-inner{display:none}
+/* Inline camera inside dropzone */
+.dropzone-video{max-width:100%;max-height:320px;border-radius:10px;display:block;background:#000}
+.dropzone-video.hidden{display:none}
+.dropzone.camera-on .dropzone-inner{display:none}
+.dropzone.camera-on .dropzone-preview{display:none}
 .video-responsive{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;border:1px solid var(--border);background:var(--card)}
 .video-responsive iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
 .ref-list{font-size:14px}

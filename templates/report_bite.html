@@ -15,6 +15,8 @@
           <small class="muted">Drag & drop a photo here</small>
         </div>
         <img id="preview-img" class="dropzone-preview hidden" alt="Preview" />
+        <!-- Inline camera lives inside the dropzone so no extra frame -->
+        <video id="cameraVideo" class="dropzone-video hidden" autoplay playsinline muted></video>
       </div>
 
       <div class="stack" style="margin-top:12px">
@@ -22,6 +24,12 @@
         <input id="gallery-input" class="hidden-input" type="file" accept="image/*" />
         <button class="btn primary full" id="btn-camera"><i class="bi bi-camera me-2"></i>Take Photo</button>
         <button class="btn outline full" id="btn-gallery"><i class="bi bi-upload me-2"></i>Upload from Gallery</button>
+      </div>
+
+      <!-- Controls shown only while camera is active -->
+      <div id="camera-controls" class="row gap hidden" style="margin-top:12px">
+        <button type="button" class="btn outline" id="btn-cancel-camera">Cancel</button>
+        <button type="button" class="btn primary" id="btn-capture"><i class="bi bi-camera me-2"></i>Capture</button>
       </div>
 
       <div id="actions" class="row gap hidden" style="margin-top:12px">
@@ -40,25 +48,6 @@
       </ul>
     </div>
 
-    <!-- Camera Modal -->
-    <div class="modal fade" id="cameraModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Take Photo</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <video id="cameraVideo" class="camera-video" autoplay playsinline></video>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn outline" id="btn-cancel-camera" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn primary" id="btn-capture"><i class="bi bi-camera me-2"></i>Capture</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <script>
       const dz = document.getElementById('dropzone');
       const previewImg = document.getElementById('preview-img');
@@ -68,11 +57,17 @@
       const btnGallery = document.getElementById('btn-gallery');
       const btnRetake = document.getElementById('btn-retake');
       const actions = document.getElementById('actions');
-      const cameraModalEl = document.getElementById('cameraModal');
       const cameraVideo = document.getElementById('cameraVideo');
       const btnCapture = document.getElementById('btn-capture');
-      let modalRef = null;
+      const btnCancelCamera = document.getElementById('btn-cancel-camera');
+      const cameraControls = document.getElementById('camera-controls');
       let mediaStream = null;
+      function setStreamingUI(on){
+        if (btnCamera) btnCamera.disabled = on;
+        if (btnGallery) btnGallery.disabled = on;
+        if (btnCapture) btnCapture.disabled = !on;
+        if (btnCancelCamera) btnCancelCamera.disabled = !on;
+      }
 
       function handleFile(file){
         if(!file) return;
@@ -88,18 +83,39 @@
 
       async function openCamera(){
         try{
+          // Immediately pause background and lock UI while we init camera
+          try { if (window.__vantaDestroy) window.__vantaDestroy(); } catch(e){}
+          setStreamingUI(true);
           if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
             // Fallback to input with capture attr (mobile)
             cameraInput.click();
+            setStreamingUI(false);
             return;
           }
-          mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+          // Lower resolution and frame rate to reduce GPU/CPU load
+          const constraints = {
+            video: {
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 960, max: 1280 },
+              height: { ideal: 540, max: 720 },
+              frameRate: { ideal: 15, max: 24 }
+            },
+            audio: false
+          };
+          mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
           cameraVideo.srcObject = mediaStream;
-          if (!modalRef && window.bootstrap && cameraModalEl){ modalRef = new window.bootstrap.Modal(cameraModalEl); }
-          if (modalRef) { modalRef.show(); }
+          try { cameraVideo.play(); } catch(e){}
+          // Show camera inline inside dropzone
+          if (cameraVideo) cameraVideo.classList.remove('hidden');
+          if (dz) dz.classList.add('camera-on');
+          if (cameraControls) cameraControls.classList.remove('hidden');
+          // UI stays in streaming state
         }catch(err){
           // Permission denied or no camera => fallback
-          cameraInput.click();
+          try { cameraInput.click(); } catch(e){}
+          setStreamingUI(false);
+          // Resume background if we failed to open camera
+          try { if (window.__vantaInit) setTimeout(()=>window.__vantaInit(), 50); } catch(e){}
         }
       }
 
@@ -108,6 +124,7 @@
           mediaStream.getTracks().forEach(t=>t.stop());
           mediaStream = null;
         }
+        setStreamingUI(false);
       }
 
       btnCamera.addEventListener('click',(e)=>{e.preventDefault(); openCamera();});
@@ -121,8 +138,14 @@
         btnCapture.addEventListener('click',()=>{
           if(!mediaStream) return;
           const trackSettings = mediaStream.getVideoTracks()[0].getSettings();
-          const w = trackSettings.width || 640;
-          const h = trackSettings.height || 480;
+          let w = trackSettings.width || 640;
+          let h = trackSettings.height || 480;
+          // Limit captured size for performance
+          const maxW = 960;
+          if (w > maxW) {
+            const ratio = w / h;
+            w = maxW; h = Math.round(maxW / ratio);
+          }
           const canvas = document.createElement('canvas');
           canvas.width = w; canvas.height = h;
           const ctx = canvas.getContext('2d');
@@ -130,13 +153,28 @@
           canvas.toBlob((blob)=>{
             if(!blob) return;
             handleFile(new File([blob], 'capture.jpg', { type: 'image/jpeg' }));
-            if (modalRef) { modalRef.hide(); }
             stopStream();
+            // Hide camera element, show dropzone preview
+            if (cameraVideo) cameraVideo.classList.add('hidden');
+            if (dz) dz.classList.remove('camera-on');
+            if (cameraControls) cameraControls.classList.add('hidden');
+            // Resume background animation after closing
+            try { if (window.__vantaInit) setTimeout(()=>window.__vantaInit(), 50); } catch(e){}
           }, 'image/jpeg', 0.92);
         });
       }
 
-      cameraModalEl && cameraModalEl.addEventListener('hidden.bs.modal', stopStream);
+      // Cancel inline camera
+      if (btnCancelCamera){
+        btnCancelCamera.addEventListener('click', (e)=>{
+          e.preventDefault();
+          stopStream();
+          if (cameraVideo) cameraVideo.classList.add('hidden');
+          if (dz) dz.classList.remove('camera-on');
+          if (cameraControls) cameraControls.classList.add('hidden');
+          try { if (window.__vantaInit) setTimeout(()=>window.__vantaInit(), 50); } catch(e){}
+        });
+      }
 
       dz.addEventListener('dragover',(e)=>{e.preventDefault(); dz.classList.add('drag');});
       dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));

@@ -102,8 +102,9 @@
     <script>
       (function(){
         var vInst;
-        function initVanta(){
-          if (!window.VANTA || !window.THREE) return;
+        var tries = 0;
+        function create(){
+          if (!window.VANTA || !window.THREE) return false;
           if (vInst && vInst.destroy) { try { vInst.destroy(); } catch(e){} }
           vInst = VANTA.WAVES({
             el: "#vanta-bg",
@@ -120,10 +121,24 @@
             scale: 1.00,
             scaleMobile: 1.00
           });
+          window.__vanta__ = vInst;
+          window.__vantaRunning = true;
+          return true;
         }
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initVanta);
-        else initVanta();
-        window.addEventListener('beforeunload', function(){ if (vInst && vInst.destroy) { try { vInst.destroy(); } catch(e){} } });
+        function tryInit(){
+          var ok = create();
+          if (!ok && tries < 30){ tries++; setTimeout(tryInit, 100); }
+        }
+        function destroy(){
+          if (vInst && vInst.destroy){ try { vInst.destroy(); } catch (e) {} }
+          vInst = null; window.__vanta__ = null; window.__vantaRunning = false;
+        }
+        window.__vantaInit = tryInit;
+        window.__vantaDestroy = destroy;
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tryInit);
+        else tryInit();
+        window.addEventListener('load', tryInit);
+        window.addEventListener('beforeunload', destroy);
       })();
     </script>
     {% endif %}
