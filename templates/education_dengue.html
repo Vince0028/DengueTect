@@ -1,12 +1,15 @@
 {% extends 'base.html' %}
 {% block title %}What is Dengue? - DengueTect{% endblock %}
 {% block content %}
-  <a class="btn linkback" href="/dashboard">← Back</a>
   <h2 class="page-title">What is Dengue?</h2>
 
   <div class="card soft">
     <h3 class="card-title">Overview</h3>
     <p class="muted">Dengue is a viral infection transmitted by <em>Aedes</em> mosquitoes. Infections range from mild illness to severe dengue with plasma leakage and bleeding. Source: <a href="https://www.who.int/news-room/fact-sheets/detail/dengue-and-severe-dengue" target="_blank" rel="noopener">WHO fact sheet</a>, <a href="https://www.cdc.gov/dengue/index.html" target="_blank" rel="noopener">CDC overview</a>.</p>
+    <div class="stack">
+      <img src="/images/Mosquito.png" alt="Mosquito 1" class="content-img" />
+      <img src="/images/mosquito2.png" alt="Mosquito 2" class="content-img" />
+    </div>
   </div>
 
   <div class="card soft">
@@ -15,6 +18,7 @@
       <li>High fever, headache, and pain behind the eyes. Source: <a href="https://www.cdc.gov/dengue/symptoms/index.html" target="_blank" rel="noopener">CDC symptoms</a>.</li>
       <li>Muscle and joint pain, nausea or vomiting, rash, and fatigue. Source: <a href="https://www.cdc.gov/dengue/symptoms/index.html" target="_blank" rel="noopener">CDC symptoms</a>.</li>
     </ul>
+    <img src="/images/symptoms.png" alt="Common symptoms" class="content-img" />
   </div>
 
   <div class="card soft">
@@ -25,11 +29,13 @@
       <li>Bleeding from gums or nose, blood in vomit or stool</li>
       <li>Lethargy, restlessness, or rapid breathing</li>
     </ul>
+    <img src="/images/heade.png" alt="Warning signs illustration" class="content-img" />
   </div>
 
   <div class="card soft">
     <h3 class="card-title">How transmission happens</h3>
     <p class="muted">Infected mosquitoes transmit dengue when they bite humans. Human to mosquito to human is the typical cycle. Source: <a href="https://www.who.int/news-room/fact-sheets/detail/dengue-and-severe-dengue" target="_blank" rel="noopener">WHO</a>.</p>
+    <img src="/images/dangers.png" alt="Transmission dangers" class="content-img" />
   </div>
 
   <div class="card soft">
@@ -50,4 +56,5 @@
       <li><a href="https://www.cdc.gov/dengue/prevention/index.html" target="_blank" rel="noopener">CDC, Prevention</a></li>
     </ul>
   </div>
+  <a class="btn linkback" href="/dashboard">← Back</a>
 {% endblock %}

@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Profile - DengueTect{% endblock %}
 {% block content %}
-  <a class="btn linkback" href="/dashboard">← Back</a>
   <h2 class="page-title">Profile / User Settings</h2>
 
   <div class="card">
@@ -12,13 +11,13 @@
         <div class="badge">Dengue Slayer</div>
       </div>
     </div>
-    <form class="form stack">
-      <label>Email<input type="email" value="juan.delacruz@email.com" /></label>
-      <label>Phone<input type="text" value="+63 912 345 6789" /></label>
-      <label>Location<input type="text" value="Barangay 183 Villamor, Pasay City" /></label>
-      <label>Birthdate<input type="date" value="1990-01-15" /></label>
+    <form class="form stack" action="/profile" method="post">
+      <label>Email<input type="email" value="{{ email }}" readonly disabled /></label>
+      <label>Phone<input type="text" name="phone" value="{{ phone }}" placeholder="e.g., +63 900 000 0000" /></label>
+      <label>Location<input type="text" name="location" value="{{ location }}" placeholder="Your city / barangay" /></label>
+      <label>Birthdate<input type="date" name="birthdate" value="{{ birthdate }}" /></label>
       <div class="row gap">
-        <button class="btn primary" type="button">Save Changes</button>
+        <button class="btn primary" type="submit">Save Changes</button>
         <a class="btn outline" href="/dashboard">Cancel</a>
       </div>
     </form>
@@ -35,4 +34,5 @@
   </div>
 
   <a class="btn danger full" href="/logout">Log out</a>
+  <a class="btn linkback" href="/dashboard">← Back</a>
 {% endblock %}

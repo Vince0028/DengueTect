@@ -316,10 +316,10 @@ def index():
 @app.route('/login', methods=['POST'])
 def login():
     # Basic JSON-backed login (demo only; not production-grade)
-    email = request.form.get('email')
+    email = (request.form.get('email') or '').strip().lower()
     password = request.form.get('password')
     if not email or not password:
-        return redirect(url_for('index'))
+        return redirect(url_for('index', error='invalid'))
 
     db = _load_db()
     user = _get_user_by_email(db, email)
@@ -330,26 +330,55 @@ def login():
             session['email'] = user['email']
             return redirect(url_for('dashboard'))
         else:
-            # Invalid password, fall back to index for simplicity
-            return redirect(url_for('index'))
+            # Invalid password
+            return redirect(url_for('index', error='invalid'))
     else:
-        # Auto-register for demo purposes
-        user = _create_user(db, email, password)
-        session['logged_in'] = True
-        session['user_id'] = user['id']
-        session['email'] = user['email']
-        return redirect(url_for('dashboard'))
+        # No account — send user to register flow with prefilled email
+        return redirect(url_for('register', email=email))
 
 
 @app.route('/logout')
 def logout():
-    session.pop('logged_in', None)
+    try:
+        session.clear()
+    except Exception:
+        session.pop('logged_in', None)
+        session.pop('user_id', None)
+        session.pop('email', None)
     return redirect(url_for('index'))
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'GET':
+        # If already logged in, go to dashboard
+        if session.get('logged_in'):
+            return redirect(url_for('dashboard'))
+        # Show registration page
+        # We pass hide_nav=True to keep focus on the form, similar to login
+        prefill = (request.args.get('email') or '').strip().lower()
+        return render_template('register.html', hide_nav=True, email=prefill)
+    # POST
+    email = (request.form.get('email') or '').strip().lower()
+    password = request.form.get('password') or ''
+    confirm = request.form.get('confirm') or ''
+    if not email or not password or not confirm:
+        return redirect(url_for('register', email=email, error='invalid'))
+    if password != confirm:
+        return redirect(url_for('register', email=email, error='mismatch'))
+    db = _load_db()
+    if _get_user_by_email(db, email):
+        return redirect(url_for('register', email=email, error='exists'))
+    user = _create_user(db, email, password)
+    session['logged_in'] = True
+    session['user_id'] = user['id']
+    session['email'] = user['email']
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard.html', hide_nav=False)
+    return render_template('dashboard.html', hide_nav=False, page_id='dashboard')
 
 
 @app.route('/education')
@@ -479,9 +508,35 @@ def symptom_checker():
     return render_template('symptom_checker.html', hide_nav=False, preselected=preselected)
 
 
-@app.route('/profile')
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
 def profile():
-    return render_template('profile.html', hide_nav=False)
+    db = _load_db()
+    uid = session.get('user_id')
+    # Find current user
+    user = None
+    for u in db.get('users', []):
+        if u.get('id') == uid:
+            user = u
+            break
+    if request.method == 'POST':
+        phone = (request.form.get('phone') or '').strip()
+        location = (request.form.get('location') or '').strip()
+        birthdate = (request.form.get('birthdate') or '').strip()
+        if user is not None:
+            prof = user.setdefault('profile', {})
+            prof['phone'] = phone
+            prof['location'] = location
+            prof['birthdate'] = birthdate
+            _save_db(db)
+        return redirect(url_for('profile'))
+    # GET
+    email = session.get('email') or (user.get('email') if user else '')
+    prof = user.get('profile', {}) if user else {}
+    phone = prof.get('phone', '')
+    location = prof.get('location', '')
+    birthdate = prof.get('birthdate', '')
+    return render_template('profile.html', hide_nav=False, email=email, phone=phone, location=location, birthdate=birthdate)
 
 
 @app.route('/settings')

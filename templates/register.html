@@ -1,32 +1,37 @@
 {% extends 'base.html' %}
-{% block title %}Login - DengueTect{% endblock %}
+{% block title %}Create Account - DengueTect{% endblock %}
 {% block content %}
   <div id="vanta-bg"></div>
   <div class="card center glass">
     <div class="text-center">
       <div class="logo-box"><img src="/images/dengue-logo.png" alt="DengueTect Logo" class="logo-img" /></div>
-      <h1>DengueTect</h1>
-      <p class="muted">AI-Powered Dengue Pre-Screening</p>
+      <h1>Create your account</h1>
+      <p class="muted">Start your dengue pre-screening journey</p>
     </div>
 
     {% if request.args.get('error') == 'invalid' %}
-      <div class="card warning" style="text-align:left">Invalid email or password.</div>
+      <div class="card warning" style="text-align:left">Please complete all fields.</div>
+    {% elif request.args.get('error') == 'mismatch' %}
+      <div class="card warning" style="text-align:left">Passwords do not match.</div>
+    {% elif request.args.get('error') == 'exists' %}
+      <div class="card warning" style="text-align:left">An account with this email already exists. Try signing in.</div>
     {% endif %}
 
-    <form action="/login" method="post" class="form">
+    <form action="/register" method="post" class="form">
       <label>Email</label>
-      <input type="email" name="email" value="{{ request.args.get('email','') }}" placeholder="Enter your email" required />
+      <input type="email" name="email" value="{{ email or '' }}" placeholder="Enter your email" required />
 
       <label>Password</label>
-      <input type="password" name="password" placeholder="Enter your password" required />
+      <input type="password" name="password" placeholder="Create a password" required />
 
-      <button type="submit" class="btn primary full">Sign In</button>
+      <label>Confirm Password</label>
+      <input type="password" name="confirm" placeholder="Re-enter your password" required />
+
+      <button type="submit" class="btn primary full">Create Account</button>
     </form>
 
     <div class="stack" style="margin-top:8px">
-      <a class="btn outline full" href="/register?email={{ request.args.get('email','') }}">Create an account</a>
-      <div class="divider">Or continue as</div>
-      <a class="btn outline full" href="/dashboard">Guest Mode</a>
+      <a class="btn outline full" href="/">Already have an account? Sign in</a>
     </div>
   </div>
 
@@ -38,7 +43,6 @@
       var vInst;
       function themeColors(){
         var theme = document.documentElement.getAttribute('data-theme') || 'light';
-        // Light theme greens, dark theme deeper greens
         return theme === 'dark' ? { c1: 0x064e3b, c2: 0x22c55e } : { c1: 0x16a34a, c2: 0x4ade80 };
       }
       function fromHex(str){ try { return parseInt(str.replace('#',''), 16); } catch(e){ return null; } }
@@ -78,7 +82,6 @@
         return true;
       }
       function tryInit(){ if (!init()) setTimeout(tryInit, 100); }
-      // Recreate when theme changes
       try{
         var mo = new MutationObserver(function(muts){
           for (var i=0;i<muts.length;i++){

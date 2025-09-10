@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Risk Assessment - DengueTect{% endblock %}
 {% block content %}
-  <a class="btn linkback" href="/dashboard">← Back</a>
   <h2 class="page-title">Risk Assessment</h2>
 
   {% set colors = {'low':'green', 'moderate':'orange', 'high':'red'} %}
@@ -172,4 +171,6 @@ p = 1 / (1 + exp(−y)) = {{ (calc.p) | round(3) }} ({{ prob_pct }}%)</pre>
       <a class="btn outline" href="/education">Learn More About Dengue</a>
     </div>
   </div>
+
+  <a class="btn linkback" href="/dashboard" style="margin-top:12px">← Back</a>
 {% endblock %}

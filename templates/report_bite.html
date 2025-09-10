@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
   {% block title %}Report a Bite - DengueTect{% endblock %}
   {% block content %}
-    <a class="btn linkback" href="/dashboard">← Back</a>
     <h2 class="page-title">Report a Bite</h2>
 
     <div class="card soft">
@@ -17,6 +16,7 @@
         <img id="preview-img" class="dropzone-preview hidden" alt="Preview" />
         <!-- Inline camera lives inside the dropzone so no extra frame -->
         <video id="cameraVideo" class="dropzone-video hidden" autoplay playsinline muted></video>
+        <div id="colorIndicator" class="color-indicator muted" style="position:absolute;bottom:8px;right:8px;z-index:2;pointer-events:none">Detecting color…</div>
       </div>
 
       <div class="stack" style="margin-top:12px">
@@ -62,6 +62,93 @@
       const btnCancelCamera = document.getElementById('btn-cancel-camera');
       const cameraControls = document.getElementById('camera-controls');
       let mediaStream = null;
+      let detectInterval = null;
+      const detectCanvas = document.createElement('canvas');
+      const detectCtx = detectCanvas.getContext('2d');
+      const indicator = document.getElementById('colorIndicator');
+
+      function setIndicator(text, cls){
+        if (!indicator) return;
+        indicator.textContent = text;
+        indicator.classList.remove('red','yellow','muted');
+        if (cls) indicator.classList.add(cls); else indicator.classList.add('muted');
+      }
+
+      function rgbToHsv(r, g, b){
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        const d = max - min;
+        let h = 0, s = max === 0 ? 0 : d / max, v = max;
+        if (d !== 0){
+          switch (max){
+            case r: h = ((g - b) / d) % 6; break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+          }
+          h *= 60; if (h < 0) h += 360;
+        }
+        return { h, s, v };
+      }
+
+      function analyzeImageData(data){
+        let red = 0, yellow = 0, total = 0;
+        const arr = data.data;
+        for (let i = 0; i < arr.length; i += 4){
+          const r = arr[i] / 255, g = arr[i+1] / 255, b = arr[i+2] / 255;
+          const {h, s, v} = rgbToHsv(r, g, b);
+          if (s >= 0.35 && v >= 0.25){
+            if (h < 12 || h > 348) red++;
+            else if (h >= 35 && h <= 65) yellow++;
+          }
+          total++;
+        }
+        return { red, yellow, total };
+      }
+
+      function decideLabel(stats){
+        const { red, yellow, total } = stats;
+        if (!total) return { text: 'No signal', cls: 'muted' };
+        const rFrac = red / total, yFrac = yellow / total;
+        const minFrac = 0.03; // 3% of pixels threshold
+        if (rFrac >= minFrac && rFrac >= yFrac) return { text: 'Detected: red area', cls: 'red' };
+        if (yFrac >= minFrac) return { text: 'Detected: yellowish area', cls: 'yellow' };
+        return { text: 'No clear red/yellow detected', cls: 'muted' };
+      }
+
+      function startDetectionFromVideo(){
+        if (!cameraVideo) return;
+        stopDetection();
+        setIndicator('Detecting color…', 'muted');
+        detectInterval = setInterval(()=>{
+          try {
+            if (cameraVideo.readyState < 2) return;
+            const w = 160, h = 120;
+            detectCanvas.width = w; detectCanvas.height = h;
+            detectCtx.drawImage(cameraVideo, 0, 0, w, h);
+            const img = detectCtx.getImageData(0, 0, w, h);
+            const stats = analyzeImageData(img);
+            const res = decideLabel(stats);
+            setIndicator(res.text, res.cls);
+          } catch(e) {}
+        }, 400);
+      }
+
+      function stopDetection(){
+        if (detectInterval){ clearInterval(detectInterval); detectInterval = null; }
+      }
+
+      function analyzeFromImage(el){
+        try{
+          const w = 200;
+          const ratio = el.naturalWidth / el.naturalHeight;
+          const h = Math.max(1, Math.round(w / (ratio || 1)));
+          detectCanvas.width = w; detectCanvas.height = h;
+          detectCtx.drawImage(el, 0, 0, w, h);
+          const img = detectCtx.getImageData(0, 0, w, h);
+          const stats = analyzeImageData(img);
+          const res = decideLabel(stats);
+          setIndicator(res.text, res.cls);
+        } catch(e) {}
+      }
       function setStreamingUI(on){
         if (btnCamera) btnCamera.disabled = on;
         if (btnGallery) btnGallery.disabled = on;
@@ -77,6 +164,9 @@
           previewImg.classList.remove('hidden');
           dz.classList.add('has-image');
           actions.classList.remove('hidden');
+          stopDetection();
+          // Wait a tick for the preview to render then analyze
+          setTimeout(()=>analyzeFromImage(previewImg), 80);
         };
         reader.readAsDataURL(file);
       }
@@ -93,22 +183,82 @@
             return;
           }
           // Lower resolution and frame rate to reduce GPU/CPU load
-          const constraints = {
-            video: {
-              facingMode: { ideal: 'environment' },
-              width: { ideal: 960, max: 1280 },
-              height: { ideal: 540, max: 720 },
-              frameRate: { ideal: 15, max: 24 }
-            },
-            audio: false
-          };
-          mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+          // Prefer the back camera; try exact environment first, then ideal, then deviceId fallback.
+          const baseVideo = { width: { ideal: 960, max: 1280 }, height: { ideal: 540, max: 720 }, frameRate: { ideal: 15, max: 24 } };
+          let pickedFacing = 'unknown';
+          async function getStream(pref){
+            return await navigator.mediaDevices.getUserMedia({ video: pref, audio: false });
+          }
+          try {
+            mediaStream = await getStream({ ...baseVideo, facingMode: { exact: 'environment' } });
+            pickedFacing = 'environment';
+          } catch(err1) {
+            try {
+              mediaStream = await getStream({ ...baseVideo, facingMode: { ideal: 'environment' } });
+              pickedFacing = 'environment';
+            } catch(err2) {
+              // Last resort: enumerate devices to find a likely back camera
+              try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const vids = devices.filter(d => d.kind === 'videoinput');
+                const back = vids.find(d => /back|rear|environment/i.test((d.label||''))) || vids.find(d => /front|user|face|integrated|built[- ]?in|webcam/i.test((d.label||''))) || vids[vids.length - 1];
+                if (back) {
+                  mediaStream = await getStream({ ...baseVideo, deviceId: { exact: back.deviceId } });
+                  pickedFacing = /back|rear|environment/i.test((back.label||'')) ? 'environment' : (/front|user|face|integrated|built[- ]?in|webcam/i.test((back.label||'')) ? 'user' : 'unknown');
+                } else {
+                  // Fallback: let browser pick any camera
+                  mediaStream = await getStream(baseVideo);
+                }
+              } catch(err3) {
+                mediaStream = await getStream(baseVideo);
+              }
+            }
+          }
           cameraVideo.srcObject = mediaStream;
           try { cameraVideo.play(); } catch(e){}
+          // Auto mirror ONLY for front camera so movements feel natural
+          try {
+            const track = mediaStream.getVideoTracks()[0];
+            const s = (track && track.getSettings) ? track.getSettings() : {};
+            const c = (track && track.getCapabilities) ? track.getCapabilities() : {};
+            const capFacing = (c && c.facingMode) ? c.facingMode : null;
+            let label = (track && track.label ? track.label : '').toLowerCase();
+            const facing = (s.facingMode || '').toLowerCase();
+            let isFront = false;
+            if (facing) {
+              isFront = facing.includes('user') || facing.includes('front') || facing.includes('face');
+            } else if (Array.isArray(capFacing) && capFacing.length) {
+              isFront = capFacing.some(v => (v+'').toLowerCase().includes('user'));
+            }
+            // If still unknown, try to match deviceId to enumerated devices for a better label
+            if (!isFront) {
+              try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const vids = devices.filter(d => d.kind === 'videoinput');
+                const active = vids.find(d => d.deviceId === s.deviceId);
+                if (active && active.label) {
+                  label = (active.label || '').toLowerCase();
+                }
+                if (!isFront && label) {
+                  isFront = /front|user|face|webcam|integrated|built[- ]?in|internal/.test(label);
+                }
+                // If there is only one video input (common on laptops), assume front for natural preview
+                if (!isFront && vids.length === 1) {
+                  isFront = true;
+                }
+              } catch (e2) {}
+            }
+            // If still unknown, fall back to our earlier pick hint
+            if (!isFront && pickedFacing === 'user') {
+              isFront = true;
+            }
+            cameraVideo.style.transform = isFront ? 'scaleX(-1)' : '';
+          } catch(e) {}
           // Show camera inline inside dropzone
           if (cameraVideo) cameraVideo.classList.remove('hidden');
           if (dz) dz.classList.add('camera-on');
           if (cameraControls) cameraControls.classList.remove('hidden');
+          startDetectionFromVideo();
           // UI stays in streaming state
         }catch(err){
           // Permission denied or no camera => fallback
@@ -125,6 +275,7 @@
           mediaStream = null;
         }
         setStreamingUI(false);
+        stopDetection();
       }
 
       btnCamera.addEventListener('click',(e)=>{e.preventDefault(); openCamera();});
@@ -164,6 +315,8 @@
         });
       }
 
+      // No manual flip control; preview is auto-corrected using facingMode
+
       // Cancel inline camera
       if (btnCancelCamera){
         btnCancelCamera.addEventListener('click', (e)=>{
@@ -193,4 +346,5 @@
         cameraInput.value=''; galleryInput.value='';
       });
     </script>
+    <a class="btn linkback" href="/dashboard">← Back</a>
   {% endblock %}

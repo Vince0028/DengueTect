@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Settings - DengueTect{% endblock %}
 {% block content %}
-  <a class="btn linkback" href="/dashboard">← Back</a>
   <h2 class="page-title">Settings</h2>
 
   <div class="card soft">
@@ -88,12 +87,27 @@
   <div class="card soft">
     <h3 class="card-title"><i class="bi bi-info-circle me-2"></i>About</h3>
     <div class="stack">
-      <a class="btn outline" href="#">Privacy Policy</a>
-      <a class="btn outline" href="#">Terms of Service</a>
+      <a class="btn outline" data-bs-toggle="collapse" href="#privacyCollapse" role="button" aria-expanded="false" aria-controls="privacyCollapse">Privacy Policy</a>
+      <div class="collapse" id="privacyCollapse">
+        <div class="stack" style="margin-top:8px">
+          <p class="muted">We value your privacy. This demo app stores minimal data locally in a JSON file for your account, assessments, and settings. No data is shared externally. Do not use real personal information in a demo environment.</p>
+          <label class="inline-check"><input type="checkbox" id="ackPrivacy" /><span>I have read the Privacy Policy</span></label>
+        </div>
+      </div>
+
+      <a class="btn outline" data-bs-toggle="collapse" href="#termsCollapse" role="button" aria-expanded="false" aria-controls="termsCollapse">Terms of Service</a>
+      <div class="collapse" id="termsCollapse">
+        <div class="stack" style="margin-top:8px">
+          <p class="muted">This is an educational demo, not medical advice. The risk estimates are not clinically validated and should not be used for diagnosis or treatment. Always consult a qualified clinician for medical decisions.</p>
+          <label class="inline-check"><input type="checkbox" id="ackTerms" /><span>I agree to the Terms of Service</span></label>
+        </div>
+      </div>
+
       <span class="muted">App Version: 1.0.0</span>
     </div>
   </div>
 
+  <a class="btn linkback" href="/dashboard">← Back</a>
   <script>
     (function(){
       var el = document.documentElement;
@@ -107,6 +121,22 @@
       }
       checkbox.addEventListener('change', function(e){
         setTheme(e.target.checked ? 'dark' : 'light');
+      });
+    })();
+  </script>
+  <script>
+    (function(){
+      function sync(id, key){
+        var box = document.getElementById(id);
+        if (!box) return;
+        try { box.checked = localStorage.getItem(key) === '1'; } catch(e){}
+        box.addEventListener('change', function(){
+          try { localStorage.setItem(key, box.checked ? '1' : '0'); } catch(e){}
+        });
+      }
+      document.addEventListener('DOMContentLoaded', function(){
+        sync('ackPrivacy','ack_privacy');
+        sync('ackTerms','ack_terms');
       });
     })();
   </script>
