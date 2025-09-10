@@ -9,15 +9,14 @@
 
   <div class="card center">
     <h3 class="card-title">Current Risk: <span class="badge {{ color }}">{{ current_risk|capitalize }} Risk</span></h3>
-    <p class="muted">Based on your symptoms and bite analysis</p>
+    <p class="muted">Primary estimate (used for Current Risk): published model calibrated to your context. Warning signs can escalate the label regardless of %.</p>
 
-    {% set risk_percentage = risk_levels[current_risk] %}
     <div class="circle">
       <svg viewBox="0 0 36 36">
         <path class="bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-        <path class="fg {{ color }}" stroke-dasharray="{{ risk_percentage }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        <path class="fg {{ color }}" stroke-dasharray="{{ prob_pct }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
       </svg>
-      <div class="circle-center {{ color }}">{{ risk_percentage }}%</div>
+      <div class="circle-center {{ color }}">{{ prob_pct }}%</div>
     </div>
 
     {% if current_risk == 'low' %}
@@ -32,31 +31,139 @@
   <div class="card">
     <h3 class="card-title">Risk Breakdown</h3>
     <div class="progress-row">
-      <span>Low Risk</span>
-      <div class="bar"><span class="bar-fill green" style="width: {{ risk_levels.low }}%"></span></div>
-      <span class="pct green">{{ risk_levels.low }}%</span>
+      <span>Estimated probability</span>
+      <div class="bar"><span class="bar-fill {{ color }}" style="width: {{ prob_pct }}%"></span></div>
+      <span class="pct {{ color }}">{{ prob_pct }}%</span>
     </div>
-    <div class="progress-row">
-      <span>Moderate Risk</span>
-      <div class="bar"><span class="bar-fill orange" style="width: {{ risk_levels.moderate }}%"></span></div>
-      <span class="pct orange">{{ risk_levels.moderate }}%</span>
-    </div>
-    <div class="progress-row">
-      <span>High Risk</span>
-      <div class="bar"><span class="bar-fill red" style="width: {{ risk_levels.high }}%"></span></div>
-      <span class="pct red">{{ risk_levels.high }}%</span>
-    </div>
+    <p class="muted" style="margin-top:8px">
+      Predictors used by this model: petechiae (+), retro-ocular pain (+), gingival bleeding (+), epistaxis (−), skin paleness (−). Selecting symptoms outside these five will not change the model probability, but they may affect the displayed risk label via WHO/CDC warning signs.
+    </p>
+    <p class="muted">
+      Positive predictors present: <strong>{{ calc.inputs.petechiae + calc.inputs.retro_ocular_pain + calc.inputs.gingival_bleeding }}/3</strong>
+      &nbsp;•&nbsp; Negative predictors present: <strong>{{ calc.inputs.epistaxis + calc.inputs.skin_paleness }}/2</strong>
+    </p>
   </div>
 
-  {% if current_risk != 'low' %}
+  <details>
+    <summary><strong>Why are there different numbers? See alternative estimates</strong></summary>
+    <div class="card" style="margin-top:8px">
+      <h3 class="card-title">Compare Estimates</h3>
+      <div class="progress-row">
+        <span>Calibrated model (Primary)</span>
+        <div class="bar"><span class="bar-fill {{ color }}" style="width: {{ prob_pct }}%"></span></div>
+        <span class="pct {{ color }}">{{ prob_pct }}%</span>
+      </div>
+      <div class="progress-row">
+        <span>Study cohort (no recalibration)</span>
+        <div class="bar"><span class="bar-fill orange" style="width: {{ p_dev_pct }}%"></span></div>
+        <span class="pct orange">{{ p_dev_pct }}%</span>
+      </div>
+      <div class="progress-row">
+        <span>Clinical-only (heuristic)</span>
+        <div class="bar"><span class="bar-fill" style="width: {{ p_clinical_pct }}%"></span></div>
+        <span class="pct">{{ p_clinical_pct }}%</span>
+      </div>
+      <p class="muted" style="margin-top:8px">
+        The clinical-only estimate is a non-validated heuristic that increases with more core symptoms and WHO/CDC warning signs; it is anchored to your chosen pretest prevalence.
+      </p>
+      <p class="muted strong" style="margin-top:4px">Clinical-only breakdown</p>
+      <ul class="ref-list">
+        <li>Core features present: <strong>{{ clinical_counts.core }}/7</strong></li>
+        <li>No cough / no sore throat present: <strong>{{ clinical_counts.resp_abs }}/2</strong></li>
+        <li>WHO/CDC warning signs present: <strong>{{ clinical_counts.warning }}/8</strong></li>
+      </ul>
+    </div>
+  </details>
+
   <div class="card">
-    <h3 class="card-title">Recommended Actions</h3>
-    <div class="stack">
-      <a class="btn outline" href="tel:911">Call Emergency Hotline: 911</a>
-      <a class="btn outline" href="#">Find Nearest Hospital</a>
+    <h3 class="card-title">Evidence-based Estimate and Calculation</h3>
+    <p class="text">
+      Estimated probability of dengue (Fernández et&nbsp;al., 2016 model):
+      <strong>{{ prob_pct }}%</strong>
+    </p>
+
+    <details>
+      <summary><strong>Show calculation details</strong></summary>
+      <div class="stack" style="margin-top:8px">
+        <p class="muted">Logistic regression equation (source cited below):</p>
+        <pre style="white-space:pre-wrap">y = 0.694
+  + 0.718 × I(petechiae)
+  + 0.516 × I(retro-ocular pain)
+  + 0.316 × I(gingival bleeding)
+  − 0.474 × I(epistaxis)
+  − 0.535 × I(skin paleness)
+
+p = 1 / (1 + exp(−y))</pre>
+
+        <p class="muted">Pretest prevalence and recalibration:</p>
+        <ul>
+          <li>Development dataset prevalence (Fernández 2016): <strong>{{ (calc.model_info.prevalence.development_prevalence * 100) | round(1) }}%</strong></li>
+          <li>Target pretest prevalence used: <strong>{{ (calc.model_info.prevalence.target_prevalence * 100) | round(1) if calc.model_info.prevalence.target_prevalence is not none else 'n/a' }}</strong> (<a href="{{ calc.model_info.prevalence.target_prevalence_source_url }}" target="_blank" rel="noopener">source</a>)</li>
+          <li>Calibration offset applied to the linear predictor: <strong>{{ (calc.model_info.prevalence.offset_applied) | round(3) }}</strong></li>
+        </ul>
+
+        <p class="muted">Inputs detected from your selections:</p>
+        <ul>
+          <li>Petechiae: <strong>{{ 1 if calc.inputs.petechiae else 0 }}</strong></li>
+          <li>Retro-ocular pain: <strong>{{ 1 if calc.inputs.retro_ocular_pain else 0 }}</strong></li>
+          <li>Gingival bleeding: <strong>{{ 1 if calc.inputs.gingival_bleeding else 0 }}</strong></li>
+          <li>Epistaxis: <strong>{{ 1 if calc.inputs.epistaxis else 0 }}</strong></li>
+          <li>Skin paleness: <strong>{{ 1 if calc.inputs.skin_paleness else 0 }}</strong></li>
+        </ul>
+
+        <p class="muted">Coefficient-weighted sum (development model):</p>
+        <pre style="white-space:pre-wrap">y_dev = {{ (calc.y_dev) | round(3) }}
+
+y = y_dev + offset
+offset (calibration) = {{ (calc.model_info.prevalence.offset_applied) | round(3) }}
+
+y (used) = {{ (calc.y) | round(3) }}
+
+Shown below for transparency (expanding the individual terms):
+y_dev = {{ (calc.coeffs.intercept) | round(3) }}
+  + {{ (calc.coeffs.petechiae) | round(3) }} × {{ calc.inputs.petechiae }}
+  + {{ (calc.coeffs.retro_ocular_pain) | round(3) }} × {{ calc.inputs.retro_ocular_pain }}
+  + {{ (calc.coeffs.gingival_bleeding) | round(3) }} × {{ calc.inputs.gingival_bleeding }}
+  − {{ (-calc.coeffs.epistaxis) | round(3) }} × {{ calc.inputs.epistaxis }}
+  − {{ (-calc.coeffs.skin_paleness) | round(3) }} × {{ calc.inputs.skin_paleness }}
+  = {{ (calc.y_dev) | round(3) }}
+
+p = 1 / (1 + exp(−y)) = {{ (calc.p) | round(3) }} ({{ prob_pct }}%)</pre>
+
+        <p class="muted">
+          Model performance reported by the source: AUC {{ (calc.model_info.auc) | round(2) }} (95% CI {{ (calc.model_info.auc_ci[0]) | round(2) }}–{{ (calc.model_info.auc_ci[1]) | round(2) }}),
+          sensitivity {{ (calc.model_info.reported_sensitivity * 100) | round(1) }}%, specificity {{ (calc.model_info.reported_specificity * 100) | round(1) }}%. The study also explored a classification cut-point of {{ (calc.model_info.explored_threshold) | round(2) }} to improve specificity while maintaining sensitivity > 85%.
+        </p>
+
+        <div class="muted" style="font-size:0.9em">
+          <p><strong>Important notes for transparency:</strong></p>
+          <ul>
+            <li>This probability is computed from a published logistic model and is not a diagnosis.</li>
+            <li>If a predictor is not selected, it is treated as 0 (absent) in the equation.</li>
+            <li>Clinical judgment and diagnostic testing are required to confirm dengue.</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+    <div class="stack" style="margin-top:12px">
+      <p class="muted"><strong>Selected symptoms:</strong> {{ ", ".join(selected_symptoms or []) if selected_symptoms else "None" }}</p>
+      <details>
+        <summary><strong>Show sources</strong></summary>
+        <div class="stack" style="margin-top:8px">
+          <ul class="ref-list">
+            <li>Fernández E, et al. A predictive model to differentiate dengue from other febrile illness. <a href="{{ calc.model_info.source_url }}" target="_blank" rel="noopener">{{ calc.model_info.source_url }}</a></li>
+            <li>CDC. Clinical Features of Dengue. <a href="{{ calc.model_info.cdc_features_url }}" target="_blank" rel="noopener">{{ calc.model_info.cdc_features_url }}</a></li>
+            {% if additional_sources %}
+              {% for src in additional_sources %}
+                <li>{{ src.title }} <a href="{{ src.url }}" target="_blank" rel="noopener">{{ src.url }}</a></li>
+              {% endfor %}
+            {% endif %}
+          </ul>
+        </div>
+      </details>
     </div>
   </div>
-  {% endif %}
 
   <div class="card">
     <h3 class="card-title">What's Next?</h3>

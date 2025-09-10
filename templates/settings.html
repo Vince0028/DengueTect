@@ -76,6 +76,16 @@
   </div>
 
   <div class="card soft">
+    <h3 class="card-title"><i class="bi bi-activity me-2"></i>Clinical assumptions</h3>
+    <form action="/settings/prevalence" method="post" class="stack">
+      <label class="strong" for="pretest_prevalence">Pretest prevalence for suspected dengue (percent)</label>
+      <input type="text" id="pretest_prevalence" name="pretest_prevalence" value="{{ ((user_prev if user_prev is not none else default_prev) * 100) | round(1) }}" placeholder="5.5" />
+      <small class="muted">We recalibrate the model intercept to this prevalence. Use a higher value during local outbreaks to reflect higher baseline risk. You can also enter a fraction (e.g., 0.055).</small>
+      <button class="btn primary" type="submit">Save</button>
+    </form>
+  </div>
+
+  <div class="card soft">
     <h3 class="card-title"><i class="bi bi-info-circle me-2"></i>About</h3>
     <div class="stack">
       <a class="btn outline" href="#">Privacy Policy</a>

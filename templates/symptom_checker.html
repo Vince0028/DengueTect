@@ -11,27 +11,38 @@
         <div>
           <p class="strong">Core symptoms</p>
           <div class="chips-grid">
-            <label class="chip"><input type="checkbox" name="symptoms" value="fever-high" /><i class="bi bi-thermometer-high"></i><span>High fever (≥38.5°C)</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="severe-headache" /><i class="bi bi-emoji-dizzy"></i><span>Severe headache</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="retro-orbital-pain" /><i class="bi bi-eye"></i><span>Pain behind the eyes</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="myalgia" /><i class="bi bi-activity"></i><span>Muscle pain</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="arthralgia" /><i class="bi bi-activity"></i><span>Joint pain</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="nausea-vomit" /><i class="bi bi-droplet"></i><span>Nausea or vomiting</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="rash" /><i class="bi bi-palette"></i><span>Skin rash</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="fatigue" /><i class="bi bi-emoji-frown"></i><span>Fatigue / weakness</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="loss-appetite" /><i class="bi bi-emoji-neutral"></i><span>Loss of appetite</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="fever-high" {% if preselected and 'fever-high' in preselected %}checked{% endif %} /><i class="bi bi-thermometer-high"></i><span>High fever (≥38.5°C)</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="severe-headache" {% if preselected and 'severe-headache' in preselected %}checked{% endif %} /><i class="bi bi-emoji-dizzy"></i><span>Severe headache</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="retro-orbital-pain" {% if preselected and 'retro-orbital-pain' in preselected %}checked{% endif %} /><i class="bi bi-eye"></i><span>Pain behind the eyes</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="myalgia" {% if preselected and 'myalgia' in preselected %}checked{% endif %} /><i class="bi bi-activity"></i><span>Muscle pain</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="arthralgia" {% if preselected and 'arthralgia' in preselected %}checked{% endif %} /><i class="bi bi-activity"></i><span>Joint pain</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="nausea-vomit" {% if preselected and 'nausea-vomit' in preselected %}checked{% endif %} /><i class="bi bi-droplet"></i><span>Nausea or vomiting</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="rash" {% if preselected and 'rash' in preselected %}checked{% endif %} /><i class="bi bi-palette"></i><span>Skin rash</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="fatigue" {% if preselected and 'fatigue' in preselected %}checked{% endif %} /><i class="bi bi-emoji-frown"></i><span>Fatigue / weakness</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="loss-appetite" {% if preselected and 'loss-appetite' in preselected %}checked{% endif %} /><i class="bi bi-emoji-neutral"></i><span>Loss of appetite</span></label>
+          </div>
+        </div>
+
+        <div>
+          <p class="strong">Additional features</p>
+          <div class="chips-grid">
+            <label class="chip"><input type="checkbox" name="symptoms" value="no-cough" {% if preselected and 'no-cough' in preselected %}checked{% endif %} /><i class="bi bi-wind"></i><span>No cough</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="no-sore-throat" {% if preselected and 'no-sore-throat' in preselected %}checked{% endif %} /><i class="bi bi-emoji-neutral"></i><span>No sore throat</span></label>
           </div>
         </div>
 
         <div>
           <p class="strong">Warning signs (seek urgent care)</p>
           <div class="chips-grid">
-            <label class="chip"><input type="checkbox" name="symptoms" value="severe-abdominal-pain" /><i class="bi bi-exclamation-octagon"></i><span>Severe abdominal pain</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="persistent-vomiting" /><i class="bi bi-exclamation-octagon"></i><span>Persistent vomiting</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="bleeding-gums-nose" /><i class="bi bi-exclamation-octagon"></i><span>Bleeding gums / nose</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="blood-in-vomit-stool" /><i class="bi bi-exclamation-octagon"></i><span>Blood in vomit or stool</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="lethargy-restlessness" /><i class="bi bi-exclamation-octagon"></i><span>Extreme drowsiness / restlessness</span></label>
-            <label class="chip"><input type="checkbox" name="symptoms" value="rapid-breathing" /><i class="bi bi-exclamation-octagon"></i><span>Rapid or difficult breathing</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="severe-abdominal-pain" {% if preselected and 'severe-abdominal-pain' in preselected %}checked{% endif %} /><i class="bi bi-exclamation-octagon"></i><span>Severe abdominal pain</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="persistent-vomiting" {% if preselected and 'persistent-vomiting' in preselected %}checked{% endif %} /><i class="bi bi-exclamation-octagon"></i><span>Persistent vomiting</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="gingival-bleeding" {% if preselected and 'gingival-bleeding' in preselected %}checked{% endif %} /><i class="bi bi-exclamation-octagon"></i><span>Gingival bleeding</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="epistaxis" {% if preselected and 'epistaxis' in preselected %}checked{% endif %} /><i class="bi bi-exclamation-octagon"></i><span>Nosebleed (epistaxis)</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="petechiae" {% if preselected and 'petechiae' in preselected %}checked{% endif %} /><i class="bi bi-droplet"></i><span>Petechiae (small red spots)</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="blood-in-vomit-stool" {% if preselected and 'blood-in-vomit-stool' in preselected %}checked{% endif %} /><i class="bi bi-exclamation-octagon"></i><span>Blood in vomit or stool</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="lethargy-restlessness" {% if preselected and 'lethargy-restlessness' in preselected %}checked{% endif %} /><i class="bi bi-exclamation-octagon"></i><span>Extreme drowsiness / restlessness</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="rapid-breathing" {% if preselected and 'rapid-breathing' in preselected %}checked{% endif %} /><i class="bi bi-exclamation-octagon"></i><span>Rapid or difficult breathing</span></label>
+            <label class="chip"><input type="checkbox" name="symptoms" value="skin-paleness" {% if preselected and 'skin-paleness' in preselected %}checked{% endif %} /><i class="bi bi-emoji-neutral"></i><span>Skin paleness</span></label>
           </div>
         </div>
 
