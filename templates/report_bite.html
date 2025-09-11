@@ -19,6 +19,7 @@
         <div id="colorIndicator" class="color-indicator muted" style="position:absolute;bottom:8px;right:8px;z-index:2;pointer-events:none">Detecting color…</div>
         <div id="debugOverlay" class="color-indicator muted" style="position:absolute;bottom:36px;right:8px;z-index:2;pointer-events:none;font-size:11px;line-height:1.2"></div>
         <div id="roiHint" class="color-indicator muted" style="position:absolute;top:8px;left:8px;z-index:2;pointer-events:none;font-size:11px;background:rgba(0,0,0,0.35);color:white;padding:2px 6px;border-radius:6px">Tap the rash to focus detection</div>
+        <div id="focusBox" class="focus-box"></div>
       </div>
 
       <div class="stack" style="margin-top:12px">
@@ -36,7 +37,7 @@
 
       <div id="actions" class="row gap hidden" style="margin-top:12px">
         <button class="btn outline" id="btn-retake">Retake</button>
-        <a class="btn primary" href="/bite-analysis-result" id="btn-analyze">Analyze Bite</a>
+        <a class="btn primary" href="/bite-analysis-result" id="btn-analyze" onclick="return window.__analyzeClick ? window.__analyzeClick(event) : true;">Analyze Bite</a>
       </div>
     </div>
 
@@ -62,6 +63,7 @@
       const cameraVideo = document.getElementById('cameraVideo');
       const btnCapture = document.getElementById('btn-capture');
       const btnCancelCamera = document.getElementById('btn-cancel-camera');
+      const btnAnalyze = document.getElementById('btn-analyze');
       const cameraControls = document.getElementById('camera-controls');
       let mediaStream = null;
       let detectInterval = null;
@@ -71,6 +73,11 @@
       const debugOverlay = document.getElementById('debugOverlay');
       const roiHint = document.getElementById('roiHint');
       let roi = null; // { cx:0..1, cy:0..1, r:0..1 }
+      const focusBox = document.getElementById('focusBox');
+      let isFrontCamera = false;
+      let _lastTapTs = 0, _lastTapX = 0, _lastTapY = 0;
+      const ANALYSIS_KEY = 'biteAnalysis';
+      let lastAnalysis = null; // { imageDataUrl, stats, res, ts }
 
       function setIndicator(text, cls){
         if (!indicator) return;
@@ -82,6 +89,93 @@
       function setDebug(rFrac, yFrac, rFracC, yFracC){
         if (!debugOverlay) return;
         debugOverlay.textContent = `Global: R ${(rFrac*100).toFixed(1)}% | Y ${(yFrac*100).toFixed(1)}%  ·  ROI: R ${(rFracC*100).toFixed(1)}% | Y ${(yFracC*100).toFixed(1)}%`;
+      }
+
+      // Helper: compress data URL for storage (limits to <=640px and JPEG quality)
+      function compressDataUrlForStorage(url, maxDim=640, quality=0.85){
+        return new Promise((resolve)=>{
+          try{
+            if (!url || typeof url !== 'string' || !url.startsWith('data:')){
+              resolve(url); return;
+            }
+            const img = new Image();
+            img.onload = function(){
+              try{
+                let w = img.naturalWidth || img.width || 0;
+                let h = img.naturalHeight || img.height || 0;
+                if (!w || !h){ resolve(url); return; }
+                if (Math.max(w, h) > maxDim){
+                  const r = w / h;
+                  if (w >= h){ w = maxDim; h = Math.round(maxDim / (r || 1)); }
+                  else { h = maxDim; w = Math.round(maxDim * (r || 1)); }
+                }
+                const c = document.createElement('canvas');
+                c.width = w; c.height = h;
+                const ctx = c.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                // Prefer JPEG to keep size small
+                const out = c.toDataURL('image/jpeg', quality);
+                resolve(out);
+              }catch(e){ resolve(url); }
+            };
+            img.onerror = function(){ resolve(url); };
+            img.src = url;
+          }catch(e){ resolve(url); }
+        });
+      }
+
+      // Build a JPEG blob suitable for upload by drawing onto a canvas (limits size)
+      function makeBlobForUpload(url, maxDim=1024, quality=0.9){
+        return new Promise((resolve)=>{
+          try{
+            if (!url || typeof url !== 'string') { resolve(null); return; }
+            const img = new Image();
+            img.onload = function(){
+              try{
+                let w = img.naturalWidth || img.width || 0;
+                let h = img.naturalHeight || img.height || 0;
+                if (!w || !h){ resolve(null); return; }
+                if (Math.max(w, h) > maxDim){
+                  const r = w / h;
+                  if (w >= h){ w = maxDim; h = Math.round(maxDim / (r || 1)); }
+                  else { h = maxDim; w = Math.round(maxDim * (r || 1)); }
+                }
+                const c = document.createElement('canvas');
+                c.width = w; c.height = h;
+                const ctx = c.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                c.toBlob((blob)=>{ resolve(blob); }, 'image/jpeg', quality);
+              }catch(e){ resolve(null); }
+            };
+            img.onerror = function(){ resolve(null); };
+            img.src = url;
+          }catch(e){ resolve(null); }
+        });
+      }
+
+      async function uploadToServer(imgUrl, roi, timeoutMs=6000){
+        const blob = await makeBlobForUpload(imgUrl);
+        if (!blob) return { ok:false };
+        const fd = new FormData();
+        fd.append('image', blob, 'upload.jpg');
+        try{ fd.append('roi', JSON.stringify(roi||null)); }catch(_){ }
+        function withTimeout(p, ms){
+          return Promise.race([
+            p,
+            new Promise((resolve)=>setTimeout(()=>resolve({ __timeout:true, ok:false }), ms))
+          ]);
+        }
+        const resp = await withTimeout(fetch('/api/analyze-bite', { method:'POST', body: fd }), timeoutMs);
+        if (!resp || !resp.ok || resp.__timeout){ return { ok:false, __timeout: !!(resp && resp.__timeout) }; }
+        const data = await resp.json().catch(()=>null);
+        if (!data || !data.ok) return { ok:false };
+        return { ok:true, data };
+      }
+
+      // Persist analysis to both sessionStorage (preferred) and localStorage (fallback)
+      function saveAnalysisPayload(payload){
+        try{ sessionStorage.setItem(ANALYSIS_KEY, JSON.stringify(payload)); }catch(_){ }
+        try{ localStorage.setItem(ANALYSIS_KEY+':fallback', JSON.stringify(payload)); }catch(_){ }
       }
 
       function rgbToHsv(r, g, b){
@@ -106,6 +200,7 @@
         // - Track a central region to reduce background bias
         let red = 0, yellow = 0, total = 0;
         let redC = 0, yellowC = 0, centerTotal = 0;
+        let strongRed = 0, strongRedC = 0;
         const arr = data.data;
         const w = data.width || 0, h = data.height || 0;
         // Default center box
@@ -120,25 +215,36 @@
           cy0 = Math.max(0, cy - rc); cy1 = Math.min(h - 1, cy + rc);
         }
 
+        // Coarse tiling to estimate local cluster density (helps avoid noise)
+        const gx = 16, gy = 12; // for 160x120 downsample, tiles are ~10x10 px
+        const cellW = Math.max(1, Math.floor(w / gx));
+        const cellH = Math.max(1, Math.floor(h / gy));
+        const tileR = new Array(gx * gy).fill(0);
+        const tileY = new Array(gx * gy).fill(0);
+        const tileT = new Array(gx * gy).fill(0);
+
         for (let y = 0; y < h; y++){
           for (let x = 0; x < w; x++){
             const idx = (y * w + x) * 4;
             const r = arr[idx] / 255, g = arr[idx+1] / 255, b = arr[idx+2] / 255;
 
             const {h: hue, s, v} = rgbToHsv(r, g, b);
-            // HSV conditions (wider ranges and slightly lower S/V cutoffs)
-            const isRedHSV = (s >= 0.22 && v >= 0.18) && (hue <= 15 || hue >= 345);
-            const isYellowHSV = (s >= 0.20 && v >= 0.25) && (hue >= 25 && hue <= 75);
-            // RGB dominance conditions
-            const maxGB = Math.max(g, b) + 1e-6;
-            const isRedRGB = (r >= 0.35) && (r - Math.max(g, b) >= 0.10) && (r / (g + 1e-6) >= 1.30) && (r / (b + 1e-6) >= 1.30);
-            const isYellowRGB = (r >= 0.30 && g >= 0.30 && b <= 0.45) && (Math.min(r, g) / Math.max(r, g) >= 0.75) && ((r - b) >= 0.08) && ((g - b) >= 0.08);
-            // Pinkish: lower saturation reds with brighter value (common for rashes)
-            const isPinkish = (v >= 0.6 && s >= 0.10 && s <= 0.40) && (hue <= 20 || hue >= 340) && (r > g && r > b);
+            // Discard dark/low-saturation pixels early (avoid shadows/gray noise)
+            // Do NOT include them in the denominator so true signals aren't diluted
+            if (v < 0.25 || s < 0.18){ continue; }
 
-            let isRed = isRedHSV || isRedRGB || isPinkish;
-            // If a pixel qualifies as red, prefer red over yellow to avoid double counting
-            let isYellow = !isRed && (isYellowHSV || isYellowRGB);
+            // Stricter HSV gating (slightly relaxed to allow vivid pen/marker)
+            const isRedHSV = (s >= 0.24 && v >= 0.30) && (hue <= 15 || hue >= 345);
+            const isYellowHSV = (s >= 0.22 && v >= 0.45) && (hue >= 35 && hue <= 70);
+            // Strong RGB dominance constraints (slightly relaxed)
+            const isRedRGB = (r >= 0.45) && (r - Math.max(g, b) >= 0.15) && (r / (g + 1e-6) >= 1.25) && (r / (b + 1e-6) >= 1.30);
+            const isYellowRGB = (r >= 0.42 && g >= 0.42 && b <= 0.38) && (Math.min(r, g) / Math.max(r, g) >= 0.78) && ((r - b) >= 0.10) && ((g - b) >= 0.10);
+            // Very strong-red override for marker/pen
+            const isStrongRed = (r >= 0.65 && g <= 0.35 && b <= 0.35) && ((r - Math.max(g,b)) >= 0.18);
+
+            // Require BOTH HSV and RGB; allow strong-red override
+            let isRed = (isRedHSV && isRedRGB) || isStrongRed;
+            const isYellow = !isRed && (isYellowHSV && isYellowRGB);
 
             if (isRed) red++; else if (isYellow) yellow++;
             total++;
@@ -146,28 +252,54 @@
             const inCenter = (x >= cx0 && x <= cx1 && y >= cy0 && y <= cy1);
             if (inCenter){
               centerTotal++;
-              if (isRed) redC++; else if (isYellow) yellowC++;
+              if (isRed) {
+                redC++;
+                if (isStrongRed) strongRedC++;
+              } else if (isYellow) {
+                yellowC++;
+              }
             }
+
+            // Accumulate coarse tile stats to gauge cluster density
+            const tx = Math.min(gx - 1, Math.floor(x / cellW));
+            const ty = Math.min(gy - 1, Math.floor(y / cellH));
+            const ti = ty * gx + tx;
+            tileT[ti]++;
+            if (isRed) tileR[ti]++; else if (isYellow) tileY[ti]++;
+            if (isStrongRed) strongRed++;
           }
         }
-        return { red, yellow, total, redC, yellowC, centerTotal };
+        // Compute strongest local density per color
+        let tileMaxRedDensity = 0, tileMaxYellowDensity = 0;
+        for (let i = 0; i < tileT.length; i++){
+          const t = tileT[i] || 0;
+          if (!t) continue;
+          tileMaxRedDensity = Math.max(tileMaxRedDensity, (tileR[i] || 0) / t);
+          tileMaxYellowDensity = Math.max(tileMaxYellowDensity, (tileY[i] || 0) / t);
+        }
+        return { red, yellow, total, redC, yellowC, centerTotal, tileMaxRedDensity, tileMaxYellowDensity, strongRed, strongRedC };
       }
 
       function decideLabel(stats){
-        const { red, yellow, total, redC = 0, yellowC = 0, centerTotal = 0 } = stats;
+        const { red, yellow, total, redC = 0, yellowC = 0, centerTotal = 0, tileMaxRedDensity = 0, tileMaxYellowDensity = 0, strongRed = 0, strongRedC = 0 } = stats;
         if (!total) return { text: 'No signal', cls: 'muted' };
         const rFrac = red / total, yFrac = yellow / total;
         const rFracC = centerTotal ? (redC / centerTotal) : 0;
         const yFracC = centerTotal ? (yellowC / centerTotal) : 0;
-        // Lower global threshold and give more weight to the central region
-        const minFrac = 0.005;        // 0.5% of all pixels
-        const centerMinFrac = 0.01;   // 1% inside central ROI
-        if ((rFrac >= minFrac && rFrac >= yFrac) || (rFracC >= centerMinFrac)){
-          return { text: 'Detected: red/pink area', cls: 'red' };
-        }
-        if ((yFrac >= minFrac) || (yFracC >= centerMinFrac)){
-          return { text: 'Detected: yellowish area', cls: 'yellow' };
-        }
+        const roiPresent = !!(roi && typeof roi.cx === 'number');
+        // ROI-aware thresholds: more lenient if user set an ROI (double-tap/tap)
+        const minFracGlobal = roiPresent ? 0.008 : 0.02;  // 0.8% vs 2%
+        const minFracROI    = roiPresent ? 0.015 : 0.05;  // 1.5% vs 5%
+        const minTileDensity= roiPresent ? 0.05 : 0.10;  // 5% vs 10%
+        // Strong red overrides
+        const strongRedOK = roiPresent && strongRedC >= Math.max(8, centerTotal * 0.005);
+        const strongRedGlobalOK = !roiPresent && (strongRed >= Math.max(20, total * 0.0025)) && (tileMaxRedDensity >= 0.06);
+
+        const redOK = strongRedOK || strongRedGlobalOK || (((rFrac >= minFracGlobal) || (rFracC >= minFracROI)) && (tileMaxRedDensity >= minTileDensity) && (rFrac >= yFrac * 1.05));
+        const yellowOK = !redOK && (((yFrac >= minFracGlobal) || (yFracC >= minFracROI)) && (tileMaxYellowDensity >= minTileDensity));
+
+        if (redOK) return { text: 'Detected: red/pink area', cls: 'red' };
+        if (yellowOK) return { text: 'Detected: yellowish area', cls: 'yellow' };
         return { text: 'No clear red/yellow detected', cls: 'muted' };
       }
 
@@ -214,6 +346,25 @@
           const rFracC = stats.centerTotal ? stats.redC / stats.centerTotal : 0;
           const yFracC = stats.centerTotal ? stats.yellowC / stats.centerTotal : 0;
           setDebug(rFrac, yFrac, rFracC, yFracC);
+          // Keep latest analysis snapshot
+          lastAnalysis = {
+            imageDataUrl: (el && el.src) ? el.src : (previewImg && previewImg.src) ? previewImg.src : '',
+            stats, res, ts: Date.now(), roi
+          };
+          // Persist immediately as a safety net (without large image to avoid quota)
+          try{
+            const autoPayload = {
+              imageDataUrl: '',
+              imageUrl: '',
+              labelText: res && res.text || '',
+              labelCls: res && res.cls || '',
+              stats,
+              roi,
+              ts: Date.now(),
+              source: 'client:auto'
+            };
+            saveAnalysisPayload(autoPayload);
+          }catch(_){ }
         } catch(e) {}
       }
       function setStreamingUI(on){
@@ -320,6 +471,7 @@
               isFront = true;
             }
             cameraVideo.style.transform = isFront ? 'scaleX(-1)' : '';
+            isFrontCamera = isFront;
           } catch(e) {}
           // Show camera inline inside dropzone
           if (cameraVideo) cameraVideo.classList.remove('hidden');
@@ -351,6 +503,54 @@
       cameraInput.addEventListener('change',(e)=>handleFile(e.target.files && e.target.files[0]));
       galleryInput.addEventListener('change',(e)=>handleFile(e.target.files && e.target.files[0]));
 
+      // Helper: show animated focus box at a client position
+      function showFocusAt(clientX, clientY){
+        if (!focusBox || !dz) return;
+        const drect = dz.getBoundingClientRect();
+        focusBox.style.left = (clientX - drect.left) + 'px';
+        focusBox.style.top = (clientY - drect.top) + 'px';
+        focusBox.classList.remove('show');
+        void focusBox.offsetWidth; // reflow to restart animation
+        focusBox.classList.add('show');
+      }
+
+      // Double-tap to focus for live camera preview
+      function handleTapFor(el){
+        if (!el) return;
+        const onTap = (ev)=>{
+          const now = Date.now();
+          const dt = now - _lastTapTs;
+          const isDouble = dt > 0 && dt < 350; // within 350ms
+          _lastTapTs = now; _lastTapX = ev.clientX; _lastTapY = ev.clientY;
+          if (!isDouble) return;
+          const rect = el.getBoundingClientRect();
+          if (!rect.width || !rect.height) return;
+          let nx = (ev.clientX - rect.left) / rect.width; // 0..1
+          let ny = (ev.clientY - rect.top) / rect.height; // 0..1
+          nx = Math.max(0, Math.min(1, nx));
+          ny = Math.max(0, Math.min(1, ny));
+          // Mirror X if front camera preview is mirrored with CSS
+          const cx = isFrontCamera ? (1 - nx) : nx;
+          const cy = ny;
+          roi = { cx, cy, r: 0.25 };
+          if (roiHint) roiHint.textContent = 'Focus set (double-tap to move)';
+          showFocusAt(ev.clientX, ev.clientY);
+        };
+        // Pointer events (modern)
+        el.addEventListener('pointerdown', onTap);
+        // iOS Safari fallback
+        el.addEventListener('touchstart', function(te){
+          try{
+            if (te.touches && te.touches[0]){
+              const t = te.touches[0];
+              onTap({ clientX: t.clientX, clientY: t.clientY });
+            }
+          }catch(e){}
+        }, { passive: true });
+      }
+
+      handleTapFor(cameraVideo);
+
       // Tap-to-focus ROI on the preview image
       if (previewImg){
         previewImg.addEventListener('click', (ev)=>{
@@ -360,6 +560,7 @@
           const cy = (ev.clientY - rect.top) / rect.height;
           roi = { cx, cy, r: 0.25 };
           if (roiHint) roiHint.textContent = 'Tap again to move focus. Double-tap to reset.';
+          showFocusAt(ev.clientX, ev.clientY);
           analyzeFromImage(previewImg);
         });
         previewImg.addEventListener('dblclick', ()=>{
@@ -429,7 +630,86 @@
         dz.classList.remove('has-image');
         actions.classList.add('hidden');
         cameraInput.value=''; galleryInput.value='';
+        lastAnalysis = null;
       });
+
+      // Persist and navigate to result page on Analyze
+      async function __handleAnalyzeClick(e){
+          e.preventDefault();
+          const href = e.currentTarget.getAttribute('href') || '/bite-analysis-result';
+          let navigateUrl = href;
+          btnAnalyze.disabled = true;
+          const origLabel = btnAnalyze.textContent;
+          try{ btnAnalyze.textContent = 'Analyzing…'; }catch(_){ }
+          try{
+            if (!lastAnalysis && previewImg && previewImg.src){
+              analyzeFromImage(previewImg);
+            }
+            let payload = null;
+            const imgUrl = (previewImg && previewImg.src) || (lastAnalysis && lastAnalysis.imageDataUrl) || '';
+            if (lastAnalysis){
+              const storageImg2 = await compressDataUrlForStorage(lastAnalysis.imageDataUrl || '');
+              payload = {
+                imageDataUrl: storageImg2,
+                imageUrl: '',
+                labelText: lastAnalysis.res && lastAnalysis.res.text || indicator.textContent || '',
+                labelCls: lastAnalysis.res && lastAnalysis.res.cls || '',
+                stats: lastAnalysis.stats || null,
+                roi: lastAnalysis.roi || roi || null,
+                ts: Date.now(),
+                source: 'client'
+              };
+            }
+            // Ensure at least a minimal payload exists (with image) before server call
+            if (!payload && imgUrl){
+              try{
+                const storageImgMin = await compressDataUrlForStorage(imgUrl);
+                payload = {
+                  imageDataUrl: storageImgMin,
+                  imageUrl: '',
+                  labelText: (indicator && indicator.textContent) || 'Analysis pending',
+                  labelCls: (indicator && (indicator.classList.contains('red') ? 'red' : indicator.classList.contains('yellow') ? 'yellow' : 'muted')) || 'muted',
+                  stats: null,
+                  roi: roi || null,
+                  ts: Date.now(),
+                  source: 'client:min'
+                };
+                saveAnalysisPayload(payload);
+              }catch(_){ }
+            }
+            if (imgUrl){
+              try{
+                const serverResp = await uploadToServer(imgUrl, roi, 6000);
+                if (serverResp && serverResp.ok && serverResp.data){
+                  const d = serverResp.data;
+                  const serverPayload = {
+                    imageDataUrl: '',
+                    imageUrl: d.image_url || '',
+                    labelText: d.labelText || '',
+                    labelCls: d.labelCls || '',
+                    stats: d.stats || null,
+                    roi: d.roi || roi || null,
+                    ts: Date.now(),
+                    source: 'server',
+                    analysisId: d.analysis_id || ''
+                  };
+                  saveAnalysisPayload(serverPayload);
+                  if (d.analysis_id){
+                    navigateUrl = href + (href.includes('?') ? '&' : '?') + 'aid=' + encodeURIComponent(d.analysis_id);
+                  }
+                }
+              }catch(_){ }
+            }
+          }catch(_){ }
+          // Store client payload if we have one
+          try{ if (payload) saveAnalysisPayload(payload); }catch(_){ }
+          // Navigate regardless
+          window.location.href = navigateUrl;
+          try{ btnAnalyze.textContent = origLabel; }catch(_){ }
+          return false;
+      }
+      window.__analyzeClick = __handleAnalyzeClick;
+      if (btnAnalyze){ btnAnalyze.addEventListener('click', __handleAnalyzeClick); }
     </script>
     <a class="btn linkback" href="/dashboard">← Back</a>
   {% endblock %}

@@ -3,15 +3,117 @@
 {% block content %}
   <h2 class="page-title">Bite Analysis Result</h2>
 
-  <div class="card">
-    <p class="muted">This is a simulated result page. In a full implementation, an AI model would analyze the image and provide insights.</p>
-    <div class="result success">
-      <strong>Preliminary Assessment:</strong> No immediate signs of severe reaction detected.
-    </div>
-    <div class="stack">
+  <div class="card" id="analysisCard">
+    <h3 class="card-title">Bite Analysis</h3>
+    <img id="analysisImage" class="content-img hidden" alt="Analyzed image" />
+    <div id="analysisBadge" class="color-indicator muted" style="margin-top:8px">Preparing analysis…</div>
+    <div id="analysisText" class="muted" style="margin-top:8px"></div>
+    <div id="analysisStats" class="muted" style="font-size:0.9em"></div>
+    <div class="stack" style="margin-top:12px">
       <a class="btn primary" href="/risk-assessment">View Risk Assessment</a>
       <a class="btn outline" href="/dashboard">Back to Dashboard</a>
     </div>
   </div>
   <a class="btn linkback" href="/report-bite">← Back</a>
+  <script>
+    (function(){
+      try{
+        const key = 'biteAnalysis';
+        let raw = null;
+        const params = new URLSearchParams(window.location.search);
+        const aid = params.get('aid');
+        try{ raw = sessionStorage.getItem(key); }catch(_){ raw = null; }
+        if (aid){
+          // Prefer fetching from server when an ID is supplied
+          fetch(`/api/analysis/${encodeURIComponent(aid)}`).then(async (r)=>{
+            if (!r.ok) throw new Error('analysis fetch failed');
+            const data = await r.json();
+            if (!data || !data.ok) throw new Error('invalid analysis');
+            const payload = {
+              imageDataUrl: '',
+              imageUrl: data.image_url || '',
+              labelText: data.labelText || '',
+              labelCls: (data.labelCls || '').trim(),
+              stats: data.stats || null,
+              roi: data.roi || null,
+              ts: Date.now(),
+              source: 'server',
+              analysisId: data.id || aid,
+            };
+            try{ sessionStorage.setItem(key, JSON.stringify(payload)); }catch(_){ }
+            try{ localStorage.setItem(key+':fallback', JSON.stringify(payload)); }catch(_){ }
+            // Render the freshly fetched payload
+            render(payload);
+          }).catch((_err)=>{
+            // Fall back to storage paths below
+            fallbackRender();
+          });
+          return; // we'll render in the fetch handler or fallback
+        }
+        // No aid -> fallback to storage
+        fallbackRender();
+
+        function fallbackRender(){
+          try{ raw = sessionStorage.getItem(key); }catch(_){ raw = raw || null; }
+          if (!raw){
+            try{ raw = localStorage.getItem(key+':fallback'); }catch(_){ raw = null; }
+            if (raw){ try{ sessionStorage.setItem(key, raw); }catch(_){ } }
+          }
+          if (raw){
+            try{ render(JSON.parse(raw)); return; }catch(_){ }
+          }
+          // If still nothing, show empty state
+          emptyState();
+        }
+
+        function emptyState(){
+          const badge = document.getElementById('analysisBadge');
+          const text = document.getElementById('analysisText');
+          badge.textContent = 'No saved analysis found';
+          badge.classList.remove('red','yellow');
+          badge.classList.add('muted');
+          text.textContent = 'Return to Report a Bite to capture or upload a photo.';
+          return;
+        }
+
+        function render(data){
+          try{
+            const img = document.getElementById('analysisImage');
+            const badge = document.getElementById('analysisBadge');
+            const text = document.getElementById('analysisText');
+            const statsBox = document.getElementById('analysisStats');
+            const chosenImg = (data && (data.imageUrl || data.imageDataUrl)) || '';
+            if (chosenImg){ img.src = chosenImg; img.classList.remove('hidden'); }
+            badge.classList.remove('muted','red','yellow');
+            const cls = (data && data.labelCls || '').trim();
+            if (cls === 'red') badge.classList.add('red');
+            else if (cls === 'yellow') badge.classList.add('yellow');
+            else badge.classList.add('muted');
+            const label = (data && data.labelText) || 'Analysis complete';
+            badge.textContent = label;
+            const s = (data && data.stats) || {};
+            const total = s.total || 0;
+            const r = s.red || 0, y = s.yellow || 0;
+            const rFrac = total ? (r/total*100).toFixed(1) : '0.0';
+            const yFrac = total ? (y/total*100).toFixed(1) : '0.0';
+            const rFracC = (s.centerTotal ? (s.redC/s.centerTotal*100) : 0).toFixed(1);
+            const yFracC = (s.centerTotal ? (s.yellowC/s.centerTotal*100) : 0).toFixed(1);
+            text.textContent = 'Preliminary assessment based on color clustering and ROI focus.';
+            statsBox.innerHTML = `
+              <div>Global red: <strong>${rFrac}%</strong> · Global yellow: <strong>${yFrac}%</strong></div>
+              <div>ROI red: <strong>${rFracC}%</strong> · ROI yellow: <strong>${yFracC}%</strong></div>
+            `;
+          }catch(_){
+            emptyState();
+          }
+        }
+      }catch(e){
+        try{
+          const badge = document.getElementById('analysisBadge');
+          badge.textContent = 'Unable to load analysis';
+          badge.classList.add('muted');
+        }catch(_){ }
+      }
+    })();
+  </script>
 {% endblock %}

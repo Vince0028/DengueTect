@@ -7,6 +7,12 @@ import math
 import socket
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+import base64
+import io
+try:
+    from PIL import Image
+except Exception:
+    Image = None
 
 # Serve existing Next.js public/ assets at the root path (e.g., /images/dengue-logo.png)
 app = Flask(__name__, static_folder='public', static_url_path='/')
@@ -27,6 +33,7 @@ def add_no_cache_headers(response):
 BASE_DIR = os.path.dirname(__file__)
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 DB_PATH = os.path.join(DATA_DIR, 'db.json')
+ANALYSIS_DIR = os.path.join(DATA_DIR, 'analyses')
 
 
 def _ensure_db():
@@ -299,9 +306,22 @@ def _compute_clinical_probability(symptoms, base_prev):
 
 @app.context_processor
 def inject_globals():
+    avatar_url = None
+    try:
+        if session.get('logged_in'):
+            db = _load_db()
+            uid = session.get('user_id')
+            for u in db.get('users', []):
+                if u.get('id') == uid:
+                    prof = u.get('profile') or {}
+                    avatar_url = prof.get('avatar_url')
+                    break
+    except Exception:
+        avatar_url = None
     return {
         'logged_in': session.get('logged_in', False),
         'current_year': datetime.now().year,
+        'avatar_url': avatar_url,
     }
 
 
@@ -406,6 +426,241 @@ def report_bite():
 @app.route('/bite-analysis-result')
 def bite_analysis_result():
     return render_template('bite_analysis_result.html', hide_nav=False)
+
+
+# --- Bite analysis API ---
+def _rgb_to_hsv_float(r, g, b):
+    """r,g,b in [0,1]; return h in [0,360), s,v in [0,1]."""
+    mx = max(r, g, b)
+    mn = min(r, g, b)
+    d = mx - mn
+    h = 0.0
+    if d != 0:
+        if mx == r:
+            h = ((g - b) / d) % 6.0
+        elif mx == g:
+            h = (b - r) / d + 2.0
+        else:
+            h = (r - g) / d + 4.0
+        h *= 60.0
+        if h < 0:
+            h += 360.0
+    s = 0.0 if mx == 0 else d / mx
+    v = mx
+    return h, s, v
+
+
+def _analyze_image_bytes(image_bytes, roi=None):
+    if Image is None:
+        raise RuntimeError('Pillow not installed')
+    im = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+    # Downscale for performance while keeping aspect
+    max_w = 200
+    w0, h0 = im.size
+    if w0 > max_w:
+        ratio = max_w / float(w0)
+        im = im.resize((max_w, max(1, int(h0 * ratio))), Image.BILINEAR)
+    w, h = im.size
+
+    px = im.load()
+    # ROI to central box
+    cx0 = int(w * 0.20); cx1 = int(w * 0.80)
+    cy0 = int(h * 0.20); cy1 = int(h * 0.80)
+    if isinstance(roi, dict) and 'cx' in roi and 'cy' in roi:
+        rc = max(8, int(min(w, h) * float(roi.get('r', 0.25))))
+        cx = int(float(roi.get('cx', 0.5)) * w)
+        cy = int(float(roi.get('cy', 0.5)) * h)
+        cx0 = max(0, cx - rc); cx1 = min(w - 1, cx + rc)
+        cy0 = max(0, cy - rc); cy1 = min(h - 1, cy + rc)
+
+    red = yellow = total = 0
+    redC = yellowC = centerTotal = 0
+    strongRed = strongRedC = 0
+
+    gx, gy = 16, 12
+    cellW = max(1, w // gx)
+    cellH = max(1, h // gy)
+    tileR = [0] * (gx * gy)
+    tileY = [0] * (gx * gy)
+    tileT = [0] * (gx * gy)
+
+    for y in range(h):
+        for x in range(w):
+            r8, g8, b8 = px[x, y]
+            r = r8 / 255.0
+            g = g8 / 255.0
+            b = b8 / 255.0
+            h_deg, s, v = _rgb_to_hsv_float(r, g, b)
+            # ignore dark/low-sat; do not add to denominator
+            if v < 0.25 or s < 0.18:
+                continue
+
+            # thresholds aligned with client
+            isRedHSV = (s >= 0.24 and v >= 0.30) and (h_deg <= 15 or h_deg >= 345)
+            isYellowHSV = (s >= 0.22 and v >= 0.45) and (35 <= h_deg <= 70)
+            isRedRGB = (r >= 0.45) and ((r - max(g, b)) >= 0.15) and (r / (g + 1e-6) >= 1.25) and (r / (b + 1e-6) >= 1.30)
+            isYellowRGB = (r >= 0.42 and g >= 0.42 and b <= 0.38) and (min(r, g) / (max(r, g) + 1e-6) >= 0.78) and ((r - b) >= 0.10) and ((g - b) >= 0.10)
+            isStrongRed = (r >= 0.65 and g <= 0.35 and b <= 0.35) and ((r - max(g, b)) >= 0.18)
+
+            isRed = (isRedHSV and isRedRGB) or isStrongRed
+            isYellow = (not isRed) and (isYellowHSV and isYellowRGB)
+
+            if isRed:
+                red += 1
+            elif isYellow:
+                yellow += 1
+            total += 1
+
+            in_center = (cx0 <= x <= cx1 and cy0 <= y <= cy1)
+            if in_center:
+                centerTotal += 1
+                if isRed:
+                    redC += 1
+                    if isStrongRed:
+                        strongRedC += 1
+                elif isYellow:
+                    yellowC += 1
+
+            tx = min(gx - 1, x // cellW)
+            ty = min(gy - 1, y // cellH)
+            ti = ty * gx + tx
+            tileT[ti] += 1
+            if isRed:
+                tileR[ti] += 1
+            elif isYellow:
+                tileY[ti] += 1
+            if isStrongRed:
+                strongRed += 1
+
+    tileMaxRedDensity = 0.0
+    tileMaxYellowDensity = 0.0
+    for i in range(len(tileT)):
+        t = tileT[i]
+        if not t:
+            continue
+        tileMaxRedDensity = max(tileMaxRedDensity, tileR[i] / t)
+        tileMaxYellowDensity = max(tileMaxYellowDensity, tileY[i] / t)
+
+    stats = {
+        'red': red, 'yellow': yellow, 'total': total,
+        'redC': redC, 'yellowC': yellowC, 'centerTotal': centerTotal,
+        'tileMaxRedDensity': tileMaxRedDensity,
+        'tileMaxYellowDensity': tileMaxYellowDensity,
+        'strongRed': strongRed, 'strongRedC': strongRedC,
+    }
+
+    # Decide label
+    roiPresent = isinstance(roi, dict) and 'cx' in roi
+    rFrac = (red / total) if total else 0.0
+    yFrac = (yellow / total) if total else 0.0
+    rFracC = (redC / centerTotal) if centerTotal else 0.0
+    yFracC = (yellowC / centerTotal) if centerTotal else 0.0
+    minFracGlobal = 0.008 if roiPresent else 0.02
+    minFracROI = 0.015 if roiPresent else 0.05
+    minTileDensity = 0.05 if roiPresent else 0.10
+    strongRedOK = roiPresent and (strongRedC >= max(8, centerTotal * 0.005))
+    strongRedGlobalOK = (not roiPresent) and (strongRed >= max(20, total * 0.0025)) and (tileMaxRedDensity >= 0.06)
+    redOK = strongRedOK or strongRedGlobalOK or (((rFrac >= minFracGlobal) or (rFracC >= minFracROI)) and (tileMaxRedDensity >= minTileDensity) and (rFrac >= yFrac * 1.05))
+    yellowOK = (not redOK) and (((yFrac >= minFracGlobal) or (yFracC >= minFracROI)) and (tileMaxYellowDensity >= minTileDensity))
+
+    if redOK:
+        res = {'text': 'Detected: red/pink area', 'cls': 'red'}
+    elif yellowOK:
+        res = {'text': 'Detected: yellowish area', 'cls': 'yellow'}
+    else:
+        res = {'text': 'No clear red/yellow detected', 'cls': 'muted'}
+
+    return stats, res
+
+
+@app.route('/api/analyze-bite', methods=['POST'])
+def api_analyze_bite():
+    """Accept image (multipart or JSON data URL) and optional ROI; return analysis JSON.
+    JSON body keys: imageDataUrl (data URL), roi {cx,cy,r}. Multipart: file field 'image', optional form 'roi'."""
+    try:
+        # Parse ROI
+        roi = None
+        if request.is_json:
+            body = request.get_json(silent=True) or {}
+            roi = body.get('roi')
+            data_url = body.get('imageDataUrl') or ''
+            image_bytes = None
+            if isinstance(data_url, str) and 'base64,' in data_url:
+                b64 = data_url.split('base64,', 1)[1]
+                image_bytes = base64.b64decode(b64)
+        else:
+            roi_raw = request.form.get('roi')
+            if roi_raw:
+                try:
+                    roi = json.loads(roi_raw)
+                except Exception:
+                    roi = None
+            image = request.files.get('image')
+            image_bytes = image.read() if image else None
+
+        if not image_bytes:
+            return {'ok': False, 'error': 'No image provided'}, 400
+
+        stats, res = _analyze_image_bytes(image_bytes, roi=roi)
+
+        # Save image to public/uploads/bites
+        up_dir = os.path.join(BASE_DIR, 'public', 'uploads', 'bites')
+        os.makedirs(up_dir, exist_ok=True)
+        fname = f"{uuid.uuid4().hex}.jpg"
+        try:
+            if Image is None:
+                raise RuntimeError('Pillow not installed')
+            im = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+            im.save(os.path.join(up_dir, fname), format='JPEG', quality=92)
+            image_url = f"/uploads/bites/{fname}"
+        except Exception:
+            image_url = None
+
+        # Persist analysis record to disk for robust mobile navigation
+        try:
+            os.makedirs(ANALYSIS_DIR, exist_ok=True)
+        except Exception:
+            pass
+        analysis_id = uuid.uuid4().hex
+        record = {
+            'id': analysis_id,
+            'created_at': datetime.utcnow().isoformat() + 'Z',
+            'labelText': res.get('text'),
+            'labelCls': res.get('cls'),
+            'stats': stats,
+            'roi': roi,
+            'image_url': image_url,
+        }
+        try:
+            with open(os.path.join(ANALYSIS_DIR, f"{analysis_id}.json"), 'w', encoding='utf-8') as f:
+                json.dump(record, f, indent=2)
+        except Exception:
+            pass
+
+        return {
+            'ok': True,
+            'labelText': record['labelText'],
+            'labelCls': record['labelCls'],
+            'stats': record['stats'],
+            'roi': record['roi'],
+            'image_url': record['image_url'],
+            'analysis_id': analysis_id,
+        }
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}, 500
+
+
+@app.route('/api/analysis/<analysis_id>', methods=['GET'])
+def api_get_analysis(analysis_id):
+    try:
+        path = os.path.join(ANALYSIS_DIR, f"{analysis_id}.json")
+        if not os.path.exists(path):
+            return {'ok': False, 'error': 'not_found'}, 404
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return {'ok': True, **data}
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}, 500
 
 
 @app.route('/risk-assessment')
@@ -529,6 +784,26 @@ def profile():
             prof['phone'] = phone
             prof['location'] = location
             prof['birthdate'] = birthdate
+            # Optional avatar upload
+            try:
+                file = request.files.get('avatar')
+            except Exception:
+                file = None
+            if file and getattr(file, 'filename', ''):
+                ext = os.path.splitext(file.filename)[1].lower()
+                if ext in ('.jpg', '.jpeg', '.png', '.gif', '.webp'):
+                    up_dir = os.path.join(BASE_DIR, 'public', 'uploads', 'avatars')
+                    try:
+                        os.makedirs(up_dir, exist_ok=True)
+                    except Exception:
+                        pass
+                    filename = f"{uid}{ext}"
+                    save_path = os.path.join(up_dir, filename)
+                    try:
+                        file.save(save_path)
+                        prof['avatar_url'] = f"/uploads/avatars/{filename}"
+                    except Exception:
+                        pass
             _save_db(db)
         return redirect(url_for('profile'))
     # GET
@@ -537,7 +812,8 @@ def profile():
     phone = prof.get('phone', '')
     location = prof.get('location', '')
     birthdate = prof.get('birthdate', '')
-    return render_template('profile.html', hide_nav=False, email=email, phone=phone, location=location, birthdate=birthdate)
+    avatar_url = prof.get('avatar_url') if prof else None
+    return render_template('profile.html', hide_nav=False, email=email, phone=phone, location=location, birthdate=birthdate, avatar_url=avatar_url)
 
 
 @app.route('/settings')

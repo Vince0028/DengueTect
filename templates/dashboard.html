@@ -1,8 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard - DengueTect{% endblock %}
 {% block content %}
-  <h2 class="page-title">Welcome to DengueTect</h2>
-  <p class="muted text-center">Your AI-powered dengue pre-screening companion</p>
+  <div class="card gradient center">
+    <h2 class="page-title">Welcome to DengueTect</h2>
+    <p class="muted text-center">Your AI-powered dengue pre-screening companion</p>
+  </div>
 
   <div class="grid">
     <a href="/report-bite" class="card link">
@@ -33,7 +35,9 @@
     </a>
   </div>
 
-  <h3 class="section-title">Educational Hub</h3>
+  <div class="card gradient center">
+    <h3 class="section-title">Educational Hub</h3>
+  </div>
   <div class="grid small">
     <a href="/education/what-is-dengue" class="card link">
       <div class="icon-box">📚</div>

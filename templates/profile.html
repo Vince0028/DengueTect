@@ -6,12 +6,20 @@
   <div class="card">
     <h3 class="card-title">Personal Information</h3>
     <div class="row gap">
-      <img src="/placeholder-logo.png" alt="User" class="avatar" />
+      <div class="avatar-stack">
+        <div id="avatarFallback" class="avatar-fallback">{{ (email or 'U')[:1]|upper }}</div>
+        <img id="avatarPreview" src="{{ avatar_url or '' }}" alt="User" class="avatar{% if not avatar_url %} hidden{% endif %}"
+             onerror="this.classList.add('hidden'); var fb=document.getElementById('avatarFallback'); if(fb) fb.classList.remove('hidden');" />
+      </div>
       <div>
         <div class="badge">Dengue Slayer</div>
       </div>
     </div>
-    <form class="form stack" action="/profile" method="post">
+    <form class="form stack" action="/profile" method="post" enctype="multipart/form-data">
+      <div class="row gap">
+        <input class="hidden-input" type="file" name="avatar" id="avatarInput" accept="image/*" />
+        <label for="avatarInput" class="btn outline">Choose profile picture</label>
+      </div>
       <label>Email<input type="email" value="{{ email }}" readonly disabled /></label>
       <label>Phone<input type="text" name="phone" value="{{ phone }}" placeholder="e.g., +63 900 000 0000" /></label>
       <label>Location<input type="text" name="location" value="{{ location }}" placeholder="Your city / barangay" /></label>
@@ -35,4 +43,23 @@
 
   <a class="btn danger full" href="/logout">Log out</a>
   <a class="btn linkback" href="/dashboard">← Back</a>
+  <script>
+    (function(){
+      var input = document.getElementById('avatarInput');
+      var img = document.getElementById('avatarPreview');
+      var fallback = document.getElementById('avatarFallback');
+      function showImage(){ try{ if (img) img.classList.remove('hidden'); if (fallback) fallback.classList.add('hidden'); }catch(e){} }
+      function showFallback(){ try{ if (img) img.classList.add('hidden'); if (fallback) fallback.classList.remove('hidden'); }catch(e){} }
+      try{
+        if (!img || !img.getAttribute('src')){ showFallback(); }
+      }catch(e){}
+      if (input && img) {
+        input.addEventListener('change', function(){
+          var f = input.files && input.files[0];
+          if (!f) return;
+          try { img.src = URL.createObjectURL(f); showImage(); } catch(e) {}
+        });
+      }
+    })();
+  </script>
 {% endblock %}

@@ -1,0 +1,24 @@
+{
+  "id": "a7bf35daf3ca45e8b7b8a1c8461d3cf8",
+  "created_at": "2025-09-11T10:34:43.577365Z",
+  "labelText": "Detected: yellowish area",
+  "labelCls": "yellow",
+  "stats": {
+    "red": 176,
+    "yellow": 2013,
+    "total": 34207,
+    "redC": 174,
+    "yellowC": 0,
+    "centerTotal": 10058,
+    "tileMaxRedDensity": 0.5378787878787878,
+    "tileMaxYellowDensity": 0.8515625,
+    "strongRed": 0,
+    "strongRedC": 0
+  },
+  "roi": {
+    "cx": 0.31944443384806315,
+    "cy": 0.5674153327941894,
+    "r": 0.25
+  },
+  "image_url": "/uploads/bites/23d861ab8cce4a6990f22300fa5de15b.jpg"
+}
