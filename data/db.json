@@ -8,6 +8,24 @@
       "settings": {
         "pretest_prevalence": 0.055
       }
+    },
+    {
+      "id": "cc8a07c7-9d51-4f1e-8c4b-de0864103f7a",
+      "email": "kikorickcruz@gmail.com",
+      "password_hash": "scrypt:32768:8:1$ssTN7XWk9jhyHko6$7e94d5e04d7bc491fba893954e05970b189e28a789b2f4e34f9dc922d22348f5045094b11ddb6344ebb6a10d858fc21c8ed880b35b04fe85ec8c92128792cacb",
+      "created_at": "2025-09-11T02:30:35.157700Z",
+      "settings": {
+        "pretest_prevalence": 0.055
+      }
+    },
+    {
+      "id": "511c49ca-d3c3-415a-b205-3574afe70ce9",
+      "email": "raibe@student.apc.edu.ph",
+      "password_hash": "scrypt:32768:8:1$RT0wYjUuvI3YcfAp$14ce2316aa023b01828342ed7ae740ac825eec04298635462b8836c22f697aa5ff01c4efdd0711d3954c754a274c9a43fad2dbe3c6e130ea1333a4b5fc453b3e",
+      "created_at": "2025-09-11T02:33:43.606110Z",
+      "settings": {
+        "pretest_prevalence": 0.055
+      }
     }
   ],
   "assessments": [
@@ -1726,6 +1744,68 @@
         }
       },
       "risk_level_display": "low"
+    },
+    {
+      "id": "34f3599f-8176-498c-8485-7defe2cfe488",
+      "user_id": "511c49ca-d3c3-415a-b205-3574afe70ce9",
+      "email": "raibe@student.apc.edu.ph",
+      "created_at": "2025-09-11T02:34:31.978996Z",
+      "symptoms": [
+        "severe-headache",
+        "myalgia",
+        "rash"
+      ],
+      "model": "fernandez2016",
+      "calc": {
+        "y_dev": 0.694,
+        "y": -3.0452357893161133,
+        "p": 0.045423604283086824,
+        "p_dev": 0.6668561551530612,
+        "inputs": {
+          "petechiae": 0,
+          "retro_ocular_pain": 0,
+          "gingival_bleeding": 0,
+          "epistaxis": 0,
+          "skin_paleness": 0
+        },
+        "coeffs": {
+          "intercept": 0.694,
+          "petechiae": 0.718,
+          "retro_ocular_pain": 0.516,
+          "gingival_bleeding": 0.316,
+          "epistaxis": -0.474,
+          "skin_paleness": -0.535
+        },
+        "model_info": {
+          "auc": 0.663,
+          "auc_ci": [
+            0.616,
+            0.71
+          ],
+          "reported_sensitivity": 0.862,
+          "reported_specificity": 0.27,
+          "explored_threshold": 0.6,
+          "notes": "Equation and AUC from Fern\u00e1ndez et al. (2016). The paper reports sensitivity 86.2% and specificity 27% for the model and discusses raising the cut-point from 0.5 to 0.6 to improve specificity while maintaining sensitivity >85%. We present these values transparently; they are not a diagnosis.",
+          "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5120437/",
+          "cdc_features_url": "https://www.cdc.gov/dengue/hcp/clinical-signs/index.html",
+          "prevalence": {
+            "development_prevalence": 0.71,
+            "target_prevalence": 0.055,
+            "offset_applied": -3.7392357893161132,
+            "target_prevalence_source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2861403/"
+          }
+        },
+        "clinical": {
+          "p": 0.14260113755008888,
+          "y": -1.793851742261272,
+          "counts": {
+            "core": 3,
+            "resp_abs": 0,
+            "warning": 0
+          }
+        }
+      },
+      "risk_level_display": "moderate"
     }
   ],
   "meta": {
