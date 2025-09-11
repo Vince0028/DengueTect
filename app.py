@@ -4,6 +4,7 @@ import os
 import json
 import uuid
 import math
+import socket
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 
@@ -582,4 +583,26 @@ def update_prevalence():
 
 if __name__ == '__main__':
     # Run with: python app.py  or  py app.py
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    debug_mode = True
+
+    # Print both desktop and mobile testing URLs (once, even with the reloader)
+    if (not debug_mode) or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                # Doesn't actually send data; just used to discover the preferred outbound IP
+                s.connect(('8.8.8.8', 80))
+                lan_ip = s.getsockname()[0]
+            finally:
+                s.close()
+        except Exception:
+            lan_ip = None
+
+        desktop_url = 'http://localhost:5000'
+        mobile_url = f'http://{lan_ip}:5000' if lan_ip else 'http://<your-lan-ip>:5000'
+        print('\nDengueTect server starting...')
+        print(f'  Desktop: {desktop_url}')
+        print(f'  Mobile (same Wi-Fi): {mobile_url}')
+        print('  Tip: If it does not open on your phone, ensure both devices are on the same network and allow the Windows Firewall prompt for Python/Flask.\n')
+
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)
