@@ -16,7 +16,7 @@ import base64
 import io
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from database import SessionLocal, User, Assessment, BiteAnalysis, Symptom, calculate_dengue_probability, determine_risk_level
+from database import SessionLocal, User, Assessment, BiteAnalysis, Symptom
 
 # Load environment variables from .env file
 try:
@@ -104,6 +104,8 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
             return result[0]
     except Exception as e:
         print(f"Database function failed, using local calculation: {e}")
+    finally:
+        db.close()
     
     # Fallback to local calculation
     s = set(symptoms_list or [])
@@ -170,7 +172,7 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
             'target_prevalence_source_url': 'https://pmc.ncbi.nlm.nih.gov/articles/PMC2861403/'
         }
     }
-
+    
     return {
         'y_dev': y_dev,
         'y': y,
@@ -180,8 +182,6 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         'coeffs': coeffs,
         'model_info': model_info
     }
-    finally:
-        db.close()
 
 # Simple login-required decorator for pages that should tie to user accounts
 def login_required(f):
@@ -206,6 +206,8 @@ def _compute_display_risk(prob, symptoms):
             return result[0]
     except Exception as e:
         print(f"Database function failed, using local calculation: {e}")
+    finally:
+        db.close()
     
     # Fallback to local calculation
     s = set(symptoms or [])
@@ -237,9 +239,8 @@ def _compute_display_risk(prob, symptoms):
         return 'high'
     if ccount >= 3 and base == 'low':
         return 'moderate'
+    
     return base
-    finally:
-        db.close()
 
 def _compute_clinical_probability(symptoms, base_prev):
     """Heuristic clinical-only probability that increases with more core features and warning signs."""

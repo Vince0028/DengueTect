@@ -3,9 +3,7 @@ services:
     name: denguetect
     env: python
     plan: free
-    buildCommand: |
-      pip install -r requirements.txt
-      python migrate.py
+    buildCommand: pip install -r requirements.txt && python migrate.py
     startCommand: gunicorn --bind 0.0.0.0:$PORT app_supabase:app
     envVars:
       - key: FLASK_DEBUG
@@ -13,6 +11,6 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        sync: false  # Set this manually in Render dashboard
+        sync: false
     healthCheckPath: /
     autoDeploy: true
