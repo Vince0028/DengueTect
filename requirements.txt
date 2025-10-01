@@ -1,2 +1,28 @@
+# Core Flask dependencies
 Flask>=3.0,<4.0
+Werkzeug>=3.0,<4.0
+
+# Database
+SQLAlchemy>=2.0,<3.0
+psycopg2-binary>=2.9,<3.0
+
+# Image processing
 Pillow>=10.0,<11.0
+
+# Production server
+gunicorn>=21.0,<22.0
+
+# Environment and configuration
+python-dotenv>=1.0,<2.0
+
+# Security
+cryptography>=41.0,<42.0
+
+# JSON handling (built-in, but explicit for clarity)
+# json - built-in module
+
+# Math and scientific computing
+numpy>=1.24,<2.0
+
+# Date/time handling
+python-dateutil>=2.8,<3.0
