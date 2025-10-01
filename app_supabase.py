@@ -34,6 +34,9 @@ except Exception:
 app = Flask(__name__, static_folder='public', static_url_path='/')
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
+# Feature flag: call SQL functions in DB for calculations
+USE_DB_FUNCTIONS = (os.getenv('USE_DB_FUNCTIONS', 'false').lower() == 'true')
+
 # Disable caching for dynamic routes to prevent stale results
 @app.after_request
 def add_no_cache_headers(response):
@@ -92,20 +95,21 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
     Evidence-based logistic model from Fernández et al. (2016):
     Source: https://pmc.ncbi.nlm.nih.gov/articles/PMC5120437/
     """
-    db = get_db()
-    try:
-        # Use database function if available, otherwise compute locally
-        result = db.execute(text("SELECT calculate_dengue_probability(:symptoms, :prevalence) as result"), {
-            'symptoms': json.dumps(symptoms_list),
-            'prevalence': target_prevalence or 0.055
-        }).fetchone()
-        
-        if result:
-            return result[0]
-    except Exception as e:
-        print(f"Database function failed, using local calculation: {e}")
-    finally:
-        db.close()
+    if USE_DB_FUNCTIONS:
+        db = get_db()
+        try:
+            # Use database function if available, otherwise compute locally
+            result = db.execute(text("SELECT calculate_dengue_probability(:symptoms, :prevalence) as result"), {
+                'symptoms': json.dumps(symptoms_list),
+                'prevalence': target_prevalence or 0.055
+            }).fetchone()
+            
+            if result:
+                return result[0]
+        except Exception as e:
+            print(f"Database function failed, using local calculation: {e}")
+        finally:
+            db.close()
     
     # Fallback to local calculation
     s = set(symptoms_list or [])
@@ -194,20 +198,21 @@ def login_required(f):
 
 def _compute_display_risk(prob, symptoms):
     """Combine model probability with WHO/CDC warning signs to determine display risk."""
-    db = get_db()
-    try:
-        # Use database function if available
-        result = db.execute(text("SELECT determine_risk_level(:prob, :symptoms) as risk_level"), {
-            'prob': prob,
-            'symptoms': json.dumps(symptoms)
-        }).fetchone()
-        
-        if result:
-            return result[0]
-    except Exception as e:
-        print(f"Database function failed, using local calculation: {e}")
-    finally:
-        db.close()
+    if USE_DB_FUNCTIONS:
+        db = get_db()
+        try:
+            # Use database function if available
+            result = db.execute(text("SELECT determine_risk_level(:prob, :symptoms) as risk_level"), {
+                'prob': prob,
+                'symptoms': json.dumps(symptoms)
+            }).fetchone()
+            
+            if result:
+                return result[0]
+        except Exception as e:
+            print(f"Database function failed, using local calculation: {e}")
+        finally:
+            db.close()
     
     # Fallback to local calculation
     s = set(symptoms or [])
@@ -655,19 +660,24 @@ def risk_assessment():
 
     db = get_db()
     try:
-        if not from_form:
-            # Reuse last saved assessment's symptoms for this user when directly visiting the page
-            last = _get_last_assessment(db, session.get('user_id'), require_symptoms=True)
-            if last:
-                symptoms = last.symptoms
-            else:
-                # Fallback to session-stored last symptoms
-                sess_syms = session.get('last_symptoms') or []
-                if sess_syms:
-                    symptoms = sess_syms
+        # Wrap the main logic to avoid returning a 500 to the user
+        try:
+            if not from_form:
+                # Reuse last saved assessment's symptoms for this user when directly visiting the page
+                last = _get_last_assessment(db, session.get('user_id'), require_symptoms=True)
+                if last:
+                    symptoms = last.symptoms
                 else:
-                    # No prior assessment with symptoms; send user to the form
-                    return redirect(url_for('symptom_checker'))
+                    # Fallback to session-stored last symptoms
+                    sess_syms = session.get('last_symptoms') or []
+                    if sess_syms:
+                        symptoms = sess_syms
+                    else:
+                        # No prior assessment with symptoms; send user to the form
+                        return redirect(url_for('symptom_checker'))
+        except Exception as e:
+            # Continue with safe defaults; downstream code will handle rendering
+            print(f"Risk assessment pre-processing error: {e}")
         
         # Determine target pretest prevalence
         user_prev = _get_user_pretest_prevalence(db, session.get('user_id'))
@@ -688,29 +698,49 @@ def risk_assessment():
 
         # Persist assessment to database only if new symptoms came from the form
         if from_form:
+            # Remember last selected symptoms regardless of DB write outcome
             try:
                 session['last_symptoms'] = list(symptoms)
             except Exception:
                 pass
-            
-            assessment = Assessment(
-                user_id=session.get('user_id'),
-                created_at=datetime.utcnow(),
-                symptoms=symptoms,
-                model='fernandez2016',
-                probability=float(calc['p']),
-                probability_dev=float(calc.get('p_dev', 0)),
-                clinical_probability=float(p_clinical),
-                model_inputs=calc.get('inputs', {}),
-                model_coefficients=calc.get('coeffs', {}),
-                model_info=calc.get('model_info', {}),
-                risk_level=current_risk,
-                pretest_prevalence=target_prev,
-                target_prevalence=target_prev,
-                logit_offset_applied=calc.get('model_info', {}).get('prevalence', {}).get('logit_offset_applied', 0)
-            )
-            db.add(assessment)
-            db.commit()
+
+            # Safely persist assessment; never crash the request
+            try:
+                raw_user_id = session.get('user_id')
+                if raw_user_id:
+                    try:
+                        user_uuid = uuid.UUID(str(raw_user_id))
+                    except Exception:
+                        user_uuid = raw_user_id  # fallback; SQLAlchemy may coerce if already UUID
+
+                    assessment = Assessment(
+                        user_id=user_uuid,
+                        created_at=datetime.utcnow(),
+                        symptoms=list(symptoms) if isinstance(symptoms, (list, tuple)) else [],
+                        model='fernandez2016',
+                        probability=float(calc['p']),
+                        probability_dev=float(calc.get('p_dev', 0) or 0.0),
+                        clinical_probability=float(p_clinical),
+                        model_inputs=calc.get('inputs', {}),
+                        model_coefficients=calc.get('coeffs', {}),
+                        model_info=calc.get('model_info', {}),
+                        risk_level=str(current_risk),
+                        pretest_prevalence=float(target_prev) if target_prev is not None else None,
+                        target_prevalence=float(target_prev) if target_prev is not None else None,
+                        logit_offset_applied=float(
+                            (calc.get('model_info', {})
+                                 .get('prevalence', {})
+                                 .get('logit_offset_applied', 0) or 0.0)
+                        )
+                    )
+                    db.add(assessment)
+                    db.commit()
+            except Exception as e:
+                try:
+                    db.rollback()
+                except Exception:
+                    pass
+                print(f"Error saving assessment to database: {e}")
 
         # Provide additional variables for template transparency
         additional_sources = [
@@ -722,6 +752,14 @@ def risk_assessment():
             {'title': 'PAHO – Dengue', 'url': 'https://www.paho.org/en/topics/dengue'},
         ]
         
+        # Prepare a safe numeric offset for template
+        try:
+            offset_applied = float((calc.get('model_info', {})
+                                     .get('prevalence', {})
+                                     .get('logit_offset_applied', 0)) or 0)
+        except Exception:
+            offset_applied = 0.0
+
         return render_template(
             'risk_assessment.html',
             current_risk=current_risk,
@@ -731,8 +769,32 @@ def risk_assessment():
             p_clinical_pct=p_clinical_pct,
             clinical_counts=clinical['counts'],
             selected_symptoms=symptoms,
+            offset_applied=offset_applied,
             additional_sources=additional_sources,
             hide_nav=False
+        )
+    except Exception as e:
+        # Log and render a safe fallback instead of a 500
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        print(f"Risk assessment error: {e}")
+        safe_calc = {'p': 0.0, 'p_dev': 0.0, 'model_info': {'prevalence': {}}}
+        safe_clinical = {'counts': {'core': 0, 'resp_abs': 0, 'warning': 0}}
+        return render_template(
+            'risk_assessment.html',
+            current_risk='low',
+            prob_pct=0,
+            calc=safe_calc,
+            p_dev_pct=0,
+            p_clinical_pct=0,
+            clinical_counts=safe_clinical['counts'],
+            selected_symptoms=symptoms,
+            offset_applied=0.0,
+            additional_sources=[],
+            hide_nav=False,
+            error=str(e)
         )
     finally:
         db.close()

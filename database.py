@@ -26,7 +26,16 @@ if not DATABASE_URL:
     SUPABASE_PASSWORD = os.getenv('SUPABASE_PASSWORD', 'your-supabase-password')
     DATABASE_URL = f"postgresql://postgres:{SUPABASE_PASSWORD}@{SUPABASE_URL}/postgres"
 
-engine = create_engine(DATABASE_URL, echo=False)
+# Ensure SSL for Supabase connections and enable pre-ping to avoid stale connections
+_db_url = DATABASE_URL
+try:
+    if _db_url and 'supabase' in _db_url and 'sslmode=' not in _db_url:
+        sep = '&' if '?' in _db_url else '?'
+        _db_url = f"{_db_url}{sep}sslmode=require"
+except Exception:
+    _db_url = DATABASE_URL
+
+engine = create_engine(_db_url, echo=False, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

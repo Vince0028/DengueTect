@@ -98,7 +98,7 @@ p = 1 / (1 + exp(−y))</pre>
         <ul>
           <li>Development dataset prevalence (Fernández 2016): <strong>{{ (calc.model_info.prevalence.development_prevalence * 100) | round(1) }}%</strong></li>
           <li>Target pretest prevalence used: <strong>{{ (calc.model_info.prevalence.target_prevalence * 100) | round(1) if calc.model_info.prevalence.target_prevalence is not none else 'n/a' }}</strong> (<a href="{{ calc.model_info.prevalence.target_prevalence_source_url }}" target="_blank" rel="noopener">source</a>)</li>
-          <li>Calibration offset applied to the linear predictor: <strong>{{ (calc.model_info.prevalence.offset_applied) | round(3) }}</strong></li>
+          <li>Calibration offset applied to the linear predictor: <strong>{{ offset_applied | round(3) }}</strong></li>
         </ul>
 
         <p class="muted">Inputs detected from your selections:</p>
@@ -114,7 +114,7 @@ p = 1 / (1 + exp(−y))</pre>
         <pre style="white-space:pre-wrap">y_dev = {{ (calc.y_dev) | round(3) }}
 
 y = y_dev + offset
-offset (calibration) = {{ (calc.model_info.prevalence.offset_applied) | round(3) }}
+offset (calibration) = {{ offset_applied | round(3) }}
 
 y (used) = {{ (calc.y) | round(3) }}
 
