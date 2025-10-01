@@ -17,6 +17,14 @@ import io
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from database import SessionLocal, User, Assessment, BiteAnalysis, Symptom, calculate_dengue_probability, determine_risk_level
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not available, use system environment variables
+
 try:
     from PIL import Image
 except Exception:

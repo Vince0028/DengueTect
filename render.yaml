@@ -14,9 +14,5 @@ services:
         generateValue: true
       - key: DATABASE_URL
         sync: false  # Set this manually in Render dashboard
-      - key: SUPABASE_URL
-        sync: false  # Set this manually in Render dashboard  
-      - key: SUPABASE_PASSWORD
-        sync: false  # Set this manually in Render dashboard
     healthCheckPath: /
     autoDeploy: true

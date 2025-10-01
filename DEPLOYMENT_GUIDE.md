@@ -33,14 +33,20 @@ This guide will help you deploy the DengueTect system to Render using Supabase a
    - Use the following settings:
      - **Build Command**: `pip install -r requirements.txt && python migrate.py`
      - **Start Command**: `gunicorn --bind 0.0.0.0:$PORT app_supabase:app`
+     - **Python Version**: 3.11
 
 3. **Set Environment Variables**
    In Render dashboard, add these environment variables:
    ```
-   DATABASE_URL=postgresql://postgres:your-password@your-supabase-url.supabase.co:5432/postgres
-   SECRET_KEY=your-secret-key-here
+   DATABASE_URL=postgresql://postgres.xucfvwescuherubfosww:dengeutech0028006@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+   SECRET_KEY=your-secret-key-here (use Render's "Generate" button)
    FLASK_DEBUG=false
    ```
+
+4. **Deploy**
+   - Click "Create Web Service"
+   - Wait for build to complete
+   - Your app will be available at the provided URL
 
 ## 📁 File Structure
 
