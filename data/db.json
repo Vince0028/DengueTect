@@ -1946,6 +1946,321 @@
         }
       },
       "risk_level_display": "moderate"
+    },
+    {
+      "id": "d23d882f-0f86-4c5a-89f9-2c3d6a5aef92",
+      "user_id": "a1878a0b-adee-4f1d-ab73-a216b00df989",
+      "email": "vpalobin@student.apc.edu.ph",
+      "created_at": "2025-10-02T11:38:27.392416Z",
+      "symptoms": [
+        "fever-high",
+        "retro-orbital-pain",
+        "myalgia",
+        "nausea-vomit"
+      ],
+      "model": "fernandez2016",
+      "calc": {
+        "y_dev": 1.21,
+        "y": -2.5292357893161133,
+        "p": 0.07383388818101319,
+        "p_dev": 0.7702989490466019,
+        "inputs": {
+          "petechiae": 0,
+          "retro_ocular_pain": 1,
+          "gingival_bleeding": 0,
+          "epistaxis": 0,
+          "skin_paleness": 0
+        },
+        "coeffs": {
+          "intercept": 0.694,
+          "petechiae": 0.718,
+          "retro_ocular_pain": 0.516,
+          "gingival_bleeding": 0.316,
+          "epistaxis": -0.474,
+          "skin_paleness": -0.535
+        },
+        "model_info": {
+          "auc": 0.663,
+          "auc_ci": [
+            0.616,
+            0.71
+          ],
+          "reported_sensitivity": 0.862,
+          "reported_specificity": 0.27,
+          "explored_threshold": 0.6,
+          "notes": "Equation and AUC from Fern\u00e1ndez et al. (2016). The paper reports sensitivity 86.2% and specificity 27% for the model and discusses raising the cut-point from 0.5 to 0.6 to improve specificity while maintaining sensitivity >85%. We present these values transparently; they are not a diagnosis.",
+          "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5120437/",
+          "cdc_features_url": "https://www.cdc.gov/dengue/hcp/clinical-signs/index.html",
+          "prevalence": {
+            "development_prevalence": 0.71,
+            "target_prevalence": 0.055,
+            "offset_applied": -3.7392357893161132,
+            "target_prevalence_source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2861403/"
+          }
+        },
+        "clinical": {
+          "p": 0.19094959275626938,
+          "y": -1.443851742261272,
+          "counts": {
+            "core": 4,
+            "resp_abs": 0,
+            "warning": 0
+          }
+        }
+      },
+      "risk_level_display": "moderate"
+    },
+    {
+      "id": "53b086f5-5efc-4757-b074-c7979d493833",
+      "user_id": "a1878a0b-adee-4f1d-ab73-a216b00df989",
+      "email": "vpalobin@student.apc.edu.ph",
+      "created_at": "2025-10-02T11:38:46.338680Z",
+      "symptoms": [
+        "fever-high",
+        "retro-orbital-pain",
+        "myalgia",
+        "nausea-vomit"
+      ],
+      "model": "fernandez2016",
+      "calc": {
+        "y_dev": 1.21,
+        "y": -2.5292357893161133,
+        "p": 0.07383388818101319,
+        "p_dev": 0.7702989490466019,
+        "inputs": {
+          "petechiae": 0,
+          "retro_ocular_pain": 1,
+          "gingival_bleeding": 0,
+          "epistaxis": 0,
+          "skin_paleness": 0
+        },
+        "coeffs": {
+          "intercept": 0.694,
+          "petechiae": 0.718,
+          "retro_ocular_pain": 0.516,
+          "gingival_bleeding": 0.316,
+          "epistaxis": -0.474,
+          "skin_paleness": -0.535
+        },
+        "model_info": {
+          "auc": 0.663,
+          "auc_ci": [
+            0.616,
+            0.71
+          ],
+          "reported_sensitivity": 0.862,
+          "reported_specificity": 0.27,
+          "explored_threshold": 0.6,
+          "notes": "Equation and AUC from Fern\u00e1ndez et al. (2016). The paper reports sensitivity 86.2% and specificity 27% for the model and discusses raising the cut-point from 0.5 to 0.6 to improve specificity while maintaining sensitivity >85%. We present these values transparently; they are not a diagnosis.",
+          "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5120437/",
+          "cdc_features_url": "https://www.cdc.gov/dengue/hcp/clinical-signs/index.html",
+          "prevalence": {
+            "development_prevalence": 0.71,
+            "target_prevalence": 0.055,
+            "offset_applied": -3.7392357893161132,
+            "target_prevalence_source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2861403/"
+          }
+        },
+        "clinical": {
+          "p": 0.19094959275626938,
+          "y": -1.443851742261272,
+          "counts": {
+            "core": 4,
+            "resp_abs": 0,
+            "warning": 0
+          }
+        }
+      },
+      "risk_level_display": "moderate"
+    },
+    {
+      "id": "1ff2a311-652c-49a2-ad04-6a2d646d15fd",
+      "user_id": "a1878a0b-adee-4f1d-ab73-a216b00df989",
+      "email": "vpalobin@student.apc.edu.ph",
+      "created_at": "2025-10-02T11:38:46.527930Z",
+      "symptoms": [
+        "fever-high",
+        "retro-orbital-pain",
+        "myalgia",
+        "nausea-vomit"
+      ],
+      "model": "fernandez2016",
+      "calc": {
+        "y_dev": 1.21,
+        "y": -2.5292357893161133,
+        "p": 0.07383388818101319,
+        "p_dev": 0.7702989490466019,
+        "inputs": {
+          "petechiae": 0,
+          "retro_ocular_pain": 1,
+          "gingival_bleeding": 0,
+          "epistaxis": 0,
+          "skin_paleness": 0
+        },
+        "coeffs": {
+          "intercept": 0.694,
+          "petechiae": 0.718,
+          "retro_ocular_pain": 0.516,
+          "gingival_bleeding": 0.316,
+          "epistaxis": -0.474,
+          "skin_paleness": -0.535
+        },
+        "model_info": {
+          "auc": 0.663,
+          "auc_ci": [
+            0.616,
+            0.71
+          ],
+          "reported_sensitivity": 0.862,
+          "reported_specificity": 0.27,
+          "explored_threshold": 0.6,
+          "notes": "Equation and AUC from Fern\u00e1ndez et al. (2016). The paper reports sensitivity 86.2% and specificity 27% for the model and discusses raising the cut-point from 0.5 to 0.6 to improve specificity while maintaining sensitivity >85%. We present these values transparently; they are not a diagnosis.",
+          "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5120437/",
+          "cdc_features_url": "https://www.cdc.gov/dengue/hcp/clinical-signs/index.html",
+          "prevalence": {
+            "development_prevalence": 0.71,
+            "target_prevalence": 0.055,
+            "offset_applied": -3.7392357893161132,
+            "target_prevalence_source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2861403/"
+          }
+        },
+        "clinical": {
+          "p": 0.19094959275626938,
+          "y": -1.443851742261272,
+          "counts": {
+            "core": 4,
+            "resp_abs": 0,
+            "warning": 0
+          }
+        }
+      },
+      "risk_level_display": "moderate"
+    },
+    {
+      "id": "31c2dece-3d18-4751-a2fe-9504965e94fd",
+      "user_id": "a1878a0b-adee-4f1d-ab73-a216b00df989",
+      "email": "vpalobin@student.apc.edu.ph",
+      "created_at": "2025-10-02T11:38:46.700479Z",
+      "symptoms": [
+        "fever-high",
+        "retro-orbital-pain",
+        "myalgia",
+        "nausea-vomit"
+      ],
+      "model": "fernandez2016",
+      "calc": {
+        "y_dev": 1.21,
+        "y": -2.5292357893161133,
+        "p": 0.07383388818101319,
+        "p_dev": 0.7702989490466019,
+        "inputs": {
+          "petechiae": 0,
+          "retro_ocular_pain": 1,
+          "gingival_bleeding": 0,
+          "epistaxis": 0,
+          "skin_paleness": 0
+        },
+        "coeffs": {
+          "intercept": 0.694,
+          "petechiae": 0.718,
+          "retro_ocular_pain": 0.516,
+          "gingival_bleeding": 0.316,
+          "epistaxis": -0.474,
+          "skin_paleness": -0.535
+        },
+        "model_info": {
+          "auc": 0.663,
+          "auc_ci": [
+            0.616,
+            0.71
+          ],
+          "reported_sensitivity": 0.862,
+          "reported_specificity": 0.27,
+          "explored_threshold": 0.6,
+          "notes": "Equation and AUC from Fern\u00e1ndez et al. (2016). The paper reports sensitivity 86.2% and specificity 27% for the model and discusses raising the cut-point from 0.5 to 0.6 to improve specificity while maintaining sensitivity >85%. We present these values transparently; they are not a diagnosis.",
+          "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5120437/",
+          "cdc_features_url": "https://www.cdc.gov/dengue/hcp/clinical-signs/index.html",
+          "prevalence": {
+            "development_prevalence": 0.71,
+            "target_prevalence": 0.055,
+            "offset_applied": -3.7392357893161132,
+            "target_prevalence_source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2861403/"
+          }
+        },
+        "clinical": {
+          "p": 0.19094959275626938,
+          "y": -1.443851742261272,
+          "counts": {
+            "core": 4,
+            "resp_abs": 0,
+            "warning": 0
+          }
+        }
+      },
+      "risk_level_display": "moderate"
+    },
+    {
+      "id": "d9a170a3-279c-417a-b6f9-876d9fb1fa55",
+      "user_id": "a1878a0b-adee-4f1d-ab73-a216b00df989",
+      "email": "vpalobin@student.apc.edu.ph",
+      "created_at": "2025-10-02T11:38:46.842296Z",
+      "symptoms": [
+        "fever-high",
+        "retro-orbital-pain",
+        "myalgia",
+        "nausea-vomit"
+      ],
+      "model": "fernandez2016",
+      "calc": {
+        "y_dev": 1.21,
+        "y": -2.5292357893161133,
+        "p": 0.07383388818101319,
+        "p_dev": 0.7702989490466019,
+        "inputs": {
+          "petechiae": 0,
+          "retro_ocular_pain": 1,
+          "gingival_bleeding": 0,
+          "epistaxis": 0,
+          "skin_paleness": 0
+        },
+        "coeffs": {
+          "intercept": 0.694,
+          "petechiae": 0.718,
+          "retro_ocular_pain": 0.516,
+          "gingival_bleeding": 0.316,
+          "epistaxis": -0.474,
+          "skin_paleness": -0.535
+        },
+        "model_info": {
+          "auc": 0.663,
+          "auc_ci": [
+            0.616,
+            0.71
+          ],
+          "reported_sensitivity": 0.862,
+          "reported_specificity": 0.27,
+          "explored_threshold": 0.6,
+          "notes": "Equation and AUC from Fern\u00e1ndez et al. (2016). The paper reports sensitivity 86.2% and specificity 27% for the model and discusses raising the cut-point from 0.5 to 0.6 to improve specificity while maintaining sensitivity >85%. We present these values transparently; they are not a diagnosis.",
+          "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5120437/",
+          "cdc_features_url": "https://www.cdc.gov/dengue/hcp/clinical-signs/index.html",
+          "prevalence": {
+            "development_prevalence": 0.71,
+            "target_prevalence": 0.055,
+            "offset_applied": -3.7392357893161132,
+            "target_prevalence_source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2861403/"
+          }
+        },
+        "clinical": {
+          "p": 0.19094959275626938,
+          "y": -1.443851742261272,
+          "counts": {
+            "core": 4,
+            "resp_abs": 0,
+            "warning": 0
+          }
+        }
+      },
+      "risk_level_display": "moderate"
     }
   ],
   "meta": {

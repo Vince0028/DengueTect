@@ -90,11 +90,163 @@ def _logit(p):
     """Calculate logit function"""
     return math.log(p / (1.0 - p))
 
+# Enhanced symptom data with weights and categories
+ENHANCED_SYMPTOMS_DATA = {
+    # Core symptoms (CDC common features) - Higher weight
+    'fever-high': {'weight': 15, 'category': 'core', 'name': 'High fever (≥38.5°C)'},
+    'severe-headache': {'weight': 12, 'category': 'core', 'name': 'Severe headache'},
+    'retro-orbital-pain': {'weight': 14, 'category': 'core', 'name': 'Pain behind the eyes'},
+    'myalgia': {'weight': 10, 'category': 'core', 'name': 'Muscle pain'},
+    'arthralgia': {'weight': 10, 'category': 'core', 'name': 'Joint pain'},
+    'nausea-vomit': {'weight': 8, 'category': 'core', 'name': 'Nausea or vomiting'},
+    'rash': {'weight': 12, 'category': 'core', 'name': 'Skin rash'},
+    'fatigue': {'weight': 6, 'category': 'core', 'name': 'Fatigue / weakness'},
+    'loss-appetite': {'weight': 4, 'category': 'core', 'name': 'Loss of appetite'},
+    
+    # Additional features (Negative predictors for dengue)
+    'no-cough': {'weight': 8, 'category': 'additional', 'name': 'No cough'},
+    'no-sore-throat': {'weight': 8, 'category': 'additional', 'name': 'No sore throat'},
+    
+    # Warning signs (WHO/CDC severe dengue indicators) - Highest weight
+    'severe-abdominal-pain': {'weight': 20, 'category': 'warning', 'name': 'Severe abdominal pain'},
+    'persistent-vomiting': {'weight': 18, 'category': 'warning', 'name': 'Persistent vomiting'},
+    'gingival-bleeding': {'weight': 22, 'category': 'warning', 'name': 'Gingival bleeding'},
+    'epistaxis': {'weight': 20, 'category': 'warning', 'name': 'Nosebleed (epistaxis)'},
+    'petechiae': {'weight': 25, 'category': 'warning', 'name': 'Petechiae (small red spots)'},
+    'blood-in-vomit-stool': {'weight': 30, 'category': 'warning', 'name': 'Blood in vomit or stool'},
+    'lethargy-restlessness': {'weight': 18, 'category': 'warning', 'name': 'Extreme drowsiness / restlessness'},
+    'rapid-breathing': {'weight': 16, 'category': 'warning', 'name': 'Rapid or difficult breathing'},
+    'skin-paleness': {'weight': 15, 'category': 'warning', 'name': 'Skin paleness'},
+}
+
+def _compute_enhanced_dengue_probability(symptoms_list):
+    """
+    Enhanced comprehensive dengue probability calculation
+    Returns percentage from 0-100% with detailed breakdown
+    """
+    if not symptoms_list:
+        return {
+            'percentage': 0,
+            'risk_level': 'none',
+            'breakdown': {
+                'core_symptoms': 0,
+                'warning_signs': 0,
+                'additional_features': 0,
+                'total_weight': 0
+            },
+            'selected_symptoms': []
+        }
+    
+    # Calculate weighted scores by category
+    core_weight = 0
+    warning_weight = 0
+    additional_weight = 0
+    selected_symptom_details = []
+    
+    for symptom in symptoms_list:
+        if symptom in ENHANCED_SYMPTOMS_DATA:
+            data = ENHANCED_SYMPTOMS_DATA[symptom]
+            selected_symptom_details.append({
+                'name': data['name'],
+                'weight': data['weight'],
+                'category': data['category']
+            })
+            
+            if data['category'] == 'core':
+                core_weight += data['weight']
+            elif data['category'] == 'warning':
+                warning_weight += data['weight']
+            elif data['category'] == 'additional':
+                additional_weight += data['weight']
+    
+    total_weight = core_weight + warning_weight + additional_weight
+    
+    # Base percentage calculation
+    # Core symptoms: max ~90 points (9 symptoms * ~10 avg weight)
+    # Warning signs: max ~184 points (9 symptoms * ~20 avg weight)  
+    # Additional: max ~16 points (2 symptoms * 8 weight)
+    # Total possible: ~290 points
+    
+    base_percentage = min(100, (total_weight / 290) * 100)
+    
+    # Apply multipliers based on symptom combinations
+    multiplier = 1.0
+    
+    # High fever is critical - boost if present
+    if 'fever-high' in symptoms_list:
+        multiplier += 0.3
+    
+    # Multiple warning signs are very concerning
+    warning_count = len([s for s in symptoms_list if ENHANCED_SYMPTOMS_DATA.get(s, {}).get('category') == 'warning'])
+    if warning_count >= 3:
+        multiplier += 0.5
+    elif warning_count >= 2:
+        multiplier += 0.3
+    elif warning_count >= 1:
+        multiplier += 0.2
+    
+    # Core symptom clusters
+    core_count = len([s for s in symptoms_list if ENHANCED_SYMPTOMS_DATA.get(s, {}).get('category') == 'core'])
+    if core_count >= 6:
+        multiplier += 0.4
+    elif core_count >= 4:
+        multiplier += 0.2
+    elif core_count >= 2:
+        multiplier += 0.1
+    
+    # Respiratory absence (no cough, no sore throat) supports dengue diagnosis
+    respiratory_absence = len([s for s in symptoms_list if s in ['no-cough', 'no-sore-throat']])
+    if respiratory_absence == 2:
+        multiplier += 0.2
+    elif respiratory_absence == 1:
+        multiplier += 0.1
+    
+    # Apply multiplier and cap at 100%
+    final_percentage = min(100, base_percentage * multiplier)
+    
+    # Determine risk level
+    if final_percentage >= 80:
+        risk_level = 'very_high'
+    elif final_percentage >= 60:
+        risk_level = 'high'
+    elif final_percentage >= 40:
+        risk_level = 'moderate'
+    elif final_percentage >= 20:
+        risk_level = 'low'
+    elif final_percentage >= 5:
+        risk_level = 'very_low'
+    else:
+        risk_level = 'minimal'
+    
+    return {
+        'percentage': round(final_percentage, 1),
+        'risk_level': risk_level,
+        'breakdown': {
+            'core_symptoms': core_weight,
+            'warning_signs': warning_weight,
+            'additional_features': additional_weight,
+            'total_weight': total_weight,
+            'base_percentage': round(base_percentage, 1),
+            'multiplier': round(multiplier, 2),
+            'symptom_counts': {
+                'core': core_count,
+                'warning': warning_count,
+                'additional': respiratory_absence
+            }
+        },
+        'selected_symptoms': selected_symptom_details
+    }
+
 def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=None):
     """
     Evidence-based logistic model from Fernández et al. (2016):
     Source: https://pmc.ncbi.nlm.nih.gov/articles/PMC5120437/
+    
+    Now enhanced with comprehensive percentage calculation
     """
+    # First get the enhanced calculation
+    enhanced_result = _compute_enhanced_dengue_probability(symptoms_list)
+    
     if USE_DB_FUNCTIONS:
         db = get_db()
         try:
@@ -105,13 +257,16 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
             }).fetchone()
             
             if result:
-                return result[0]
+                # Merge enhanced result with database result
+                db_result = result[0]
+                db_result.update(enhanced_result)
+                return db_result
         except Exception as e:
             print(f"Database function failed, using local calculation: {e}")
         finally:
             db.close()
     
-    # Fallback to local calculation
+    # Fallback to local calculation (original Fernández model)
     s = set(symptoms_list or [])
     
     # Map inputs (booleans 0/1)
@@ -177,7 +332,8 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         }
     }
     
-    return {
+    # Merge original model with enhanced results
+    original_result = {
         'y_dev': y_dev,
         'y': y,
         'p': p,
@@ -186,6 +342,10 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         'coeffs': coeffs,
         'model_info': model_info
     }
+    
+    # Combine both results
+    original_result.update(enhanced_result)
+    return original_result
 
 # Simple login-required decorator for pages that should tie to user accounts
 def login_required(f):
@@ -685,8 +845,12 @@ def risk_assessment():
         target_prev = user_prev if isinstance(user_prev, (int, float)) else default_prev
 
         calc = _compute_dengue_probability_from_symptoms(symptoms, target_prevalence=target_prev)
-        prob = calc['p']
+        prob = calc.get('p', 0)
         prob_pct = round(prob * 100)
+        
+        # Use enhanced percentage calculation
+        enhanced_percentage = calc.get('percentage', prob_pct)
+        enhanced_risk_level = calc.get('risk_level', 'low')
         
         # Clinical-only heuristic probability for UX
         clinical = _compute_clinical_probability(symptoms, target_prev)
@@ -764,6 +928,8 @@ def risk_assessment():
             'risk_assessment.html',
             current_risk=current_risk,
             prob_pct=prob_pct,
+            enhanced_percentage=enhanced_percentage,
+            enhanced_risk_level=enhanced_risk_level,
             calc=calc,
             p_dev_pct=round(calc.get('p_dev', 0) * 100),
             p_clinical_pct=p_clinical_pct,
@@ -902,6 +1068,130 @@ def update_prevalence():
         db.close()
     
     return redirect(url_for('settings'))
+
+@app.route('/api/symptom-combinations', methods=['GET'])
+def api_symptom_combinations():
+    """Get comprehensive symptom combination data"""
+    try:
+        import itertools
+        
+        # Get single symptom percentages
+        single_symptoms = []
+        for symptom, data in ENHANCED_SYMPTOMS_DATA.items():
+            result = _compute_enhanced_dengue_probability([symptom])
+            single_symptoms.append({
+                'symptom': symptom,
+                'name': data['name'],
+                'category': data['category'],
+                'weight': data['weight'],
+                'percentage': result['percentage'],
+                'risk_level': result['risk_level']
+            })
+        
+        # Sort by percentage (highest first)
+        single_symptoms.sort(key=lambda x: x['percentage'], reverse=True)
+        
+        # Get high risk combinations (60%+)
+        all_symptoms = list(ENHANCED_SYMPTOMS_DATA.keys())
+        high_risk_combos = []
+        
+        # Check combinations up to 4 symptoms for high risk
+        for r in range(1, 5):
+            for combo in itertools.combinations(all_symptoms, r):
+                result = _compute_enhanced_dengue_probability(list(combo))
+                if result['percentage'] >= 60:
+                    high_risk_combos.append({
+                        'symptoms': list(combo),
+                        'symptom_names': [ENHANCED_SYMPTOMS_DATA[s]['name'] for s in combo],
+                        'count': len(combo),
+                        'percentage': result['percentage'],
+                        'risk_level': result['risk_level']
+                    })
+        
+        # Sort by percentage (highest first)
+        high_risk_combos.sort(key=lambda x: x['percentage'], reverse=True)
+        
+        # Get all symptoms result
+        all_symptoms_result = _compute_enhanced_dengue_probability(all_symptoms)
+        
+        # Generate key combinations
+        key_combinations = []
+        
+        # Core symptoms only
+        core_symptoms = [s for s, data in ENHANCED_SYMPTOMS_DATA.items() if data['category'] == 'core']
+        result = _compute_enhanced_dengue_probability(core_symptoms)
+        key_combinations.append({
+            'name': 'All Core Symptoms',
+            'symptoms': core_symptoms,
+            'percentage': result['percentage'],
+            'risk_level': result['risk_level']
+        })
+        
+        # Warning signs only
+        warning_symptoms = [s for s, data in ENHANCED_SYMPTOMS_DATA.items() if data['category'] == 'warning']
+        result = _compute_enhanced_dengue_probability(warning_symptoms)
+        key_combinations.append({
+            'name': 'All Warning Signs',
+            'symptoms': warning_symptoms,
+            'percentage': result['percentage'],
+            'risk_level': result['risk_level']
+        })
+        
+        # Classic dengue presentation
+        classic_dengue = ['fever-high', 'severe-headache', 'retro-orbital-pain', 'myalgia', 'nausea-vomit']
+        result = _compute_enhanced_dengue_probability(classic_dengue)
+        key_combinations.append({
+            'name': 'Classic Dengue Presentation',
+            'symptoms': classic_dengue,
+            'percentage': result['percentage'],
+            'risk_level': result['risk_level']
+        })
+        
+        # Severe dengue indicators
+        severe_dengue = ['fever-high', 'severe-abdominal-pain', 'persistent-vomiting', 'gingival-bleeding', 'petechiae']
+        result = _compute_enhanced_dengue_probability(severe_dengue)
+        key_combinations.append({
+            'name': 'Severe Dengue Indicators',
+            'symptoms': severe_dengue,
+            'percentage': result['percentage'],
+            'risk_level': result['risk_level']
+        })
+        
+        return jsonify({
+            'ok': True,
+            'single_symptoms': single_symptoms,
+            'high_risk_combinations': high_risk_combos[:50],  # Limit to top 50
+            'all_symptoms_result': {
+                'percentage': all_symptoms_result['percentage'],
+                'risk_level': all_symptoms_result['risk_level'],
+                'breakdown': all_symptoms_result['breakdown']
+            },
+            'key_combinations': key_combinations,
+            'total_symptoms': len(ENHANCED_SYMPTOMS_DATA)
+        })
+        
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}, 500
+
+@app.route('/api/calculate-risk', methods=['POST'])
+def api_calculate_risk():
+    """Calculate risk for specific symptom combination"""
+    try:
+        data = request.get_json()
+        symptoms = data.get('symptoms', [])
+        
+        if not isinstance(symptoms, list):
+            return {'ok': False, 'error': 'symptoms must be a list'}, 400
+        
+        result = _compute_enhanced_dengue_probability(symptoms)
+        
+        return jsonify({
+            'ok': True,
+            'result': result
+        })
+        
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}, 500
 
 if __name__ == '__main__':
     # Run with: python app_supabase.py

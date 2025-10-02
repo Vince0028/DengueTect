@@ -8,14 +8,27 @@
 
   <div class="card center">
     <h3 class="card-title">Current Risk: <span class="badge {{ color }}">{{ current_risk|capitalize }} Risk</span></h3>
+    {% if enhanced_percentage is defined %}
+      <p class="muted">Enhanced comprehensive assessment: {{ enhanced_percentage }}% risk ({{ enhanced_risk_level|replace('_', ' ')|title }})</p>
+    {% endif %}
     <p class="muted">Primary estimate (used for Current Risk): published model calibrated to your context. Warning signs can escalate the label regardless of %.</p>
 
     <div class="circle">
       <svg viewBox="0 0 36 36">
         <path class="bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-        <path class="fg {{ color }}" stroke-dasharray="{{ prob_pct }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        {% if enhanced_percentage is defined %}
+          <path class="fg {{ color }}" stroke-dasharray="{{ enhanced_percentage }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        {% else %}
+          <path class="fg {{ color }}" stroke-dasharray="{{ prob_pct }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        {% endif %}
       </svg>
-      <div class="circle-center {{ color }}">{{ prob_pct }}%</div>
+      <div class="circle-center {{ color }}">
+        {% if enhanced_percentage is defined %}
+          {{ enhanced_percentage }}%
+        {% else %}
+          {{ prob_pct }}%
+        {% endif %}
+      </div>
     </div>
 
     {% if current_risk == 'low' %}
@@ -29,8 +42,26 @@
 
   <div class="card">
     <h3 class="card-title">Risk Breakdown</h3>
+    {% if enhanced_percentage is defined and calc.breakdown is defined %}
+      <div class="progress-row">
+        <span>Enhanced comprehensive assessment</span>
+        <div class="bar"><span class="bar-fill {{ color }}" style="width: {{ enhanced_percentage }}%"></span></div>
+        <span class="pct {{ color }}">{{ enhanced_percentage }}%</span>
+      </div>
+      <p class="muted" style="margin-top:8px">
+        <strong>Symptom Category Breakdown:</strong>
+      </p>
+      <ul class="ref-list">
+        <li>Core symptoms weight: <strong>{{ calc.breakdown.core_symptoms }}</strong> ({{ calc.breakdown.symptom_counts.core }} symptoms)</li>
+        <li>Warning signs weight: <strong>{{ calc.breakdown.warning_signs }}</strong> ({{ calc.breakdown.symptom_counts.warning }} symptoms)</li>
+        <li>Additional features weight: <strong>{{ calc.breakdown.additional_features }}</strong> ({{ calc.breakdown.symptom_counts.additional }} symptoms)</li>
+        <li>Total weight: <strong>{{ calc.breakdown.total_weight }}</strong></li>
+        <li>Base percentage: <strong>{{ calc.breakdown.base_percentage }}%</strong></li>
+        <li>Multiplier applied: <strong>{{ calc.breakdown.multiplier }}</strong></li>
+      </ul>
+    {% endif %}
     <div class="progress-row">
-      <span>Estimated probability</span>
+      <span>Original model probability</span>
       <div class="bar"><span class="bar-fill {{ color }}" style="width: {{ prob_pct }}%"></span></div>
       <span class="pct {{ color }}">{{ prob_pct }}%</span>
     </div>
@@ -171,6 +202,129 @@ p = 1 / (1 + exp(−y)) = {{ (calc.p) | round(3) }} ({{ prob_pct }}%)</pre>
       <a class="btn outline" href="/education">Learn More About Dengue</a>
     </div>
   </div>
+
+  <details class="card">
+    <summary><span class="card-title"><strong>Combinations and Percentages</strong></span></summary>
+    <div class="stack" style="margin-top:8px">
+      <p class="muted">This section lists all single-symptom percentages and the top high-risk combinations computed by the enhanced assessment. All symptoms selected will always show 100%.</p>
+
+      <div class="row between" style="gap:12px; align-items:flex-end">
+        <div>
+          <p class="strong">Single symptoms (highest to lowest)</p>
+        </div>
+        <small id="combo-meta" class="muted"></small>
+      </div>
+
+      <div class="table-wrap" style="overflow:auto">
+        <table class="table" id="single-symptoms-table">
+          <thead>
+            <tr>
+              <th style="min-width:220px">Symptom</th>
+              <th>Category</th>
+              <th>Weight</th>
+              <th>Percentage</th>
+              <th>Risk level</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="5" class="muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="strong" style="margin-top:12px">Top high-risk combinations (60%+)</p>
+      <div class="table-wrap" style="overflow:auto">
+        <table class="table" id="high-risk-combos-table">
+          <thead>
+            <tr>
+              <th style="min-width:320px">Symptoms</th>
+              <th>Count</th>
+              <th>Percentage</th>
+              <th>Risk level</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="4" class="muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="muted" id="all-symptoms-summary"></p>
+    </div>
+
+    <script>
+      (function(){
+        async function loadCombinations(){
+          try{
+            const res = await fetch('/api/symptom-combinations', { headers: { 'Accept':'application/json' } });
+            if(!res.ok) throw new Error('Request failed');
+            const data = await res.json();
+            if(!data || !data.ok) throw new Error(data && data.error || 'Invalid response');
+
+            const singleTbody = document.querySelector('#single-symptoms-table tbody');
+            const combosTbody = document.querySelector('#high-risk-combos-table tbody');
+            const meta = document.getElementById('combo-meta');
+            const allSummary = document.getElementById('all-symptoms-summary');
+
+            // Single symptoms
+            singleTbody.innerHTML = '';
+            (data.single_symptoms || []).forEach(row => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td>${row.name}</td>
+                <td>${row.category}</td>
+                <td>${row.weight}</td>
+                <td><strong>${row.percentage}%</strong></td>
+                <td>${row.risk_level.replace(/_/g,' ')}</td>
+              `;
+              singleTbody.appendChild(tr);
+            });
+
+            // High-risk combinations
+            combosTbody.innerHTML = '';
+            (data.high_risk_combinations || []).forEach(row => {
+              const names = (row.symptom_names || row.symptoms || []).join(', ');
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td>${names}</td>
+                <td>${row.count}</td>
+                <td><strong>${row.percentage}%</strong></td>
+                <td>${row.risk_level.replace(/_/g,' ')}</td>
+              `;
+              combosTbody.appendChild(tr);
+            });
+
+            // Metadata
+            if(meta) meta.textContent = `Symptoms tracked: ${data.total_symptoms}`;
+
+            // All-symptoms summary
+            if(data.all_symptoms_result){
+              allSummary.textContent = `All symptoms selected → ${data.all_symptoms_result.percentage}% (${data.all_symptoms_result.risk_level.replace(/_/g,' ')})`;
+            }
+          } catch(err){
+            const singleTbody = document.querySelector('#single-symptoms-table tbody');
+            const combosTbody = document.querySelector('#high-risk-combos-table tbody');
+            singleTbody.innerHTML = `<tr><td colspan="5" class="danger">Failed to load: ${err && err.message ? err.message : 'Error'}</td></tr>`;
+            combosTbody.innerHTML = `<tr><td colspan="4" class="danger">Failed to load.</td></tr>`;
+          }
+        }
+        // Lazy load when user expands the details
+        const details = document.currentScript && document.currentScript.closest('details');
+        if(details){
+          let loaded = false;
+          details.addEventListener('toggle', () => {
+            if(details.open && !loaded){
+              loaded = true;
+              loadCombinations();
+            }
+          });
+        } else {
+          // Fallback: load immediately
+          loadCombinations();
+        }
+      })();
+    </script>
+  </details>
 
   <a class="btn linkback" href="/dashboard" style="margin-top:12px">← Back</a>
 {% endblock %}

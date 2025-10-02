@@ -225,6 +225,122 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         'model_info': model_info
     }
 
+# --- Enhanced percentage-based assessment (complements the published model) ---
+# Symptom weights and categories used to compute an intuitive percentage that grows
+# with more dengue-consistent symptoms and warning signs.
+ENHANCED_SYMPTOMS_DATA = {
+    'fever-high': {'weight': 15, 'category': 'core', 'name': 'High fever (≥38.5°C)'},
+    'severe-headache': {'weight': 12, 'category': 'core', 'name': 'Severe headache'},
+    'retro-orbital-pain': {'weight': 14, 'category': 'core', 'name': 'Pain behind the eyes'},
+    'myalgia': {'weight': 10, 'category': 'core', 'name': 'Muscle pain'},
+    'arthralgia': {'weight': 10, 'category': 'core', 'name': 'Joint pain'},
+    'nausea-vomit': {'weight': 8, 'category': 'core', 'name': 'Nausea or vomiting'},
+    'rash': {'weight': 12, 'category': 'core', 'name': 'Skin rash'},
+    'fatigue': {'weight': 6, 'category': 'core', 'name': 'Fatigue / weakness'},
+    'loss-appetite': {'weight': 4, 'category': 'core', 'name': 'Loss of appetite'},
+    'no-cough': {'weight': 8, 'category': 'additional', 'name': 'No cough'},
+    'no-sore-throat': {'weight': 8, 'category': 'additional', 'name': 'No sore throat'},
+    'severe-abdominal-pain': {'weight': 20, 'category': 'warning', 'name': 'Severe abdominal pain'},
+    'persistent-vomiting': {'weight': 18, 'category': 'warning', 'name': 'Persistent vomiting'},
+    'gingival-bleeding': {'weight': 22, 'category': 'warning', 'name': 'Gingival bleeding'},
+    'epistaxis': {'weight': 20, 'category': 'warning', 'name': 'Nosebleed (epistaxis)'},
+    'petechiae': {'weight': 25, 'category': 'warning', 'name': 'Petechiae (small red spots)'},
+    'blood-in-vomit-stool': {'weight': 30, 'category': 'warning', 'name': 'Blood in vomit or stool'},
+    'lethargy-restlessness': {'weight': 18, 'category': 'warning', 'name': 'Extreme drowsiness / restlessness'},
+    'rapid-breathing': {'weight': 16, 'category': 'warning', 'name': 'Rapid or difficult breathing'},
+    'skin-paleness': {'weight': 15, 'category': 'warning', 'name': 'Skin paleness'},
+}
+
+def _compute_enhanced_dengue_percentage(symptoms_list):
+    if not symptoms_list:
+        return {
+            'percentage': 0,
+            'risk_level': 'none',
+            'breakdown': {
+                'core_symptoms': 0,
+                'warning_signs': 0,
+                'additional_features': 0,
+                'total_weight': 0,
+                'base_percentage': 0,
+                'multiplier': 1.0,
+                'symptom_counts': {'core': 0, 'warning': 0, 'additional': 0}
+            },
+            'selected_symptoms': []
+        }
+
+    core_weight = 0
+    warning_weight = 0
+    additional_weight = 0
+    selected_details = []
+
+    for s in symptoms_list:
+        data = ENHANCED_SYMPTOMS_DATA.get(s)
+        if not data:
+            continue
+        selected_details.append({'name': data['name'], 'weight': data['weight'], 'category': data['category']})
+        if data['category'] == 'core':
+            core_weight += data['weight']
+        elif data['category'] == 'warning':
+            warning_weight += data['weight']
+        elif data['category'] == 'additional':
+            additional_weight += data['weight']
+
+    total_weight = core_weight + warning_weight + additional_weight
+    base_percentage = min(100.0, (total_weight / 290.0) * 100.0)
+
+    multiplier = 1.0
+    sset = set(symptoms_list)
+    if 'fever-high' in sset:
+        multiplier += 0.30
+    warning_count = sum(1 for s in sset if ENHANCED_SYMPTOMS_DATA.get(s, {}).get('category') == 'warning')
+    if warning_count >= 3:
+        multiplier += 0.50
+    elif warning_count >= 2:
+        multiplier += 0.30
+    elif warning_count >= 1:
+        multiplier += 0.20
+    core_count = sum(1 for s in sset if ENHANCED_SYMPTOMS_DATA.get(s, {}).get('category') == 'core')
+    if core_count >= 6:
+        multiplier += 0.40
+    elif core_count >= 4:
+        multiplier += 0.20
+    elif core_count >= 2:
+        multiplier += 0.10
+    resp_abs = sum(1 for s in sset if s in ('no-cough', 'no-sore-throat'))
+    if resp_abs == 2:
+        multiplier += 0.20
+    elif resp_abs == 1:
+        multiplier += 0.10
+
+    final_percentage = min(100.0, base_percentage * multiplier)
+    if final_percentage >= 80:
+        level = 'very_high'
+    elif final_percentage >= 60:
+        level = 'high'
+    elif final_percentage >= 40:
+        level = 'moderate'
+    elif final_percentage >= 20:
+        level = 'low'
+    elif final_percentage >= 5:
+        level = 'very_low'
+    else:
+        level = 'minimal'
+
+    return {
+        'percentage': round(final_percentage, 1),
+        'risk_level': level,
+        'breakdown': {
+            'core_symptoms': core_weight,
+            'warning_signs': warning_weight,
+            'additional_features': additional_weight,
+            'total_weight': total_weight,
+            'base_percentage': round(base_percentage, 1),
+            'multiplier': round(multiplier, 2),
+            'symptom_counts': {'core': core_count, 'warning': warning_count, 'additional': resp_abs}
+        },
+        'selected_symptoms': selected_details
+    }
+
 
 # Simple login-required decorator for pages that should tie to user accounts
 def login_required(f):
@@ -692,6 +808,8 @@ def risk_assessment():
     calc = _compute_dengue_probability_from_symptoms(symptoms, target_prevalence=target_prev)
     prob = calc['p']
     prob_pct = round(prob * 100)
+    # Enhanced comprehensive percentage for UI
+    enhanced = _compute_enhanced_dengue_percentage(symptoms)
     # Clinical-only heuristic probability for UX (non-validated)
     clinical = _compute_clinical_probability(symptoms, target_prev)
     p_clinical = clinical['p']
@@ -745,7 +863,9 @@ def risk_assessment():
         'risk_assessment.html',
         current_risk=current_risk,
         prob_pct=prob_pct,
-        calc=calc,
+        enhanced_percentage=enhanced['percentage'],
+        enhanced_risk_level=enhanced['risk_level'],
+        calc={**calc, **{'breakdown': enhanced['breakdown']}},
         p_dev_pct=round(calc['p_dev'] * 100),
         p_clinical_pct=p_clinical_pct,
         clinical_counts=clinical['counts'],
