@@ -10,6 +10,9 @@
     <h3 class="card-title">Current Risk: <span class="badge {{ color }}">{{ current_risk|capitalize }} Risk</span></h3>
     {% if enhanced_percentage is defined %}
       <p class="muted">Enhanced comprehensive assessment: {{ enhanced_percentage }}% risk ({{ enhanced_risk_level|replace('_', ' ')|title }})</p>
+      {% if bite_adjustment is defined and bite_adjustment > 0 %}
+        <p class="muted">Bite analysis adjustment: +{{ bite_adjustment }}%{% if bite_label %} ({{ bite_label }}){% endif %}{% if analysis_id %} · <a href="/bite-analysis-result?aid={{ analysis_id }}">view analysis</a>{% endif %}</p>
+      {% endif %}
     {% endif %}
     <p class="muted">Primary estimate (used for Current Risk): published model calibrated to your context. Warning signs can escalate the label regardless of %.</p>
 

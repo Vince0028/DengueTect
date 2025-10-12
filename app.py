@@ -818,6 +818,45 @@ def risk_assessment():
     # Determine display risk combining probability and CDC/WHO warning signs
     current_risk = _compute_display_risk(prob, symptoms)
 
+    # Optional: incorporate bite analysis result into enhanced percentage
+    # Accept either a direct label via ?bite=red|yellow or an analysis ID via ?aid=<id>
+    bite_label = (request.args.get('bite') or '').strip().lower() or None
+    analysis_id = (request.args.get('aid') or '').strip() or None
+    if (not bite_label) and analysis_id:
+        try:
+            path = os.path.join(ANALYSIS_DIR, f"{analysis_id}.json")
+            if os.path.exists(path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    _adata = json.load(f)
+                _lbl = (_adata.get('labelCls') or '').strip().lower()
+                if _lbl in ('red', 'yellow'):
+                    bite_label = _lbl
+        except Exception:
+            bite_label = bite_label or None
+
+    # Compute additive boost to enhanced UI percentage based on bite color
+    bite_adjustment = 0.0
+    if bite_label == 'red':
+        bite_adjustment = 12.0  # stronger boost for red/pink area
+    elif bite_label == 'yellow':
+        bite_adjustment = 5.0   # mild boost for yellowish area
+
+    enhanced_percentage_val = float(enhanced.get('percentage', prob_pct))
+    enhanced_percentage_val = min(100.0, round(enhanced_percentage_val + bite_adjustment, 1))
+    # Map adjusted percentage back to risk level buckets used by the enhanced UI
+    if enhanced_percentage_val >= 80:
+        enhanced_risk_level_val = 'very_high'
+    elif enhanced_percentage_val >= 60:
+        enhanced_risk_level_val = 'high'
+    elif enhanced_percentage_val >= 40:
+        enhanced_risk_level_val = 'moderate'
+    elif enhanced_percentage_val >= 20:
+        enhanced_risk_level_val = 'low'
+    elif enhanced_percentage_val >= 5:
+        enhanced_risk_level_val = 'very_low'
+    else:
+        enhanced_risk_level_val = 'minimal'
+
     # Persist assessment to JSON DB only if new symptoms came from the form
     if from_form:
         try:
@@ -863,13 +902,16 @@ def risk_assessment():
         'risk_assessment.html',
         current_risk=current_risk,
         prob_pct=prob_pct,
-        enhanced_percentage=enhanced['percentage'],
-        enhanced_risk_level=enhanced['risk_level'],
+        enhanced_percentage=enhanced_percentage_val,
+        enhanced_risk_level=enhanced_risk_level_val,
         calc={**calc, **{'breakdown': enhanced['breakdown']}},
         p_dev_pct=round(calc['p_dev'] * 100),
         p_clinical_pct=p_clinical_pct,
         clinical_counts=clinical['counts'],
         selected_symptoms=symptoms,
+        bite_label=bite_label,
+        bite_adjustment=round(bite_adjustment, 1),
+        analysis_id=analysis_id,
         additional_sources=additional_sources,
         hide_nav=False
     )

@@ -860,6 +860,42 @@ def risk_assessment():
         # Determine display risk combining probability and CDC/WHO warning signs
         current_risk = _compute_display_risk(prob, symptoms)
 
+        # Optional: incorporate bite analysis result into enhanced percentage
+        # Accept either a direct label via ?bite=red|yellow or an analysis ID via ?aid=<uuid>
+        bite_label = (request.args.get('bite') or '').strip().lower() or None
+        analysis_id = (request.args.get('aid') or '').strip() or None
+        if (not bite_label) and analysis_id:
+            try:
+                # Fetch from database if available
+                analysis = db.query(BiteAnalysis).filter(BiteAnalysis.id == analysis_id).first()
+                if analysis and analysis.label_class and analysis.label_class.lower() in ('red', 'yellow'):
+                    bite_label = analysis.label_class.lower()
+            except Exception as e:
+                print(f"Bite analysis lookup failed: {e}")
+
+        # Compute additive boost to enhanced UI percentage based on bite color
+        bite_adjustment = 0.0
+        if bite_label == 'red':
+            bite_adjustment = 12.0  # stronger boost for red/pink area
+        elif bite_label == 'yellow':
+            bite_adjustment = 5.0   # mild boost for yellowish area
+
+        enhanced_percentage_val = float(calc.get('percentage', prob_pct))
+        enhanced_percentage_val = min(100.0, round(enhanced_percentage_val + bite_adjustment, 1))
+        # Map adjusted percentage back to risk level buckets used by the enhanced UI
+        if enhanced_percentage_val >= 80:
+            enhanced_risk_level_val = 'very_high'
+        elif enhanced_percentage_val >= 60:
+            enhanced_risk_level_val = 'high'
+        elif enhanced_percentage_val >= 40:
+            enhanced_risk_level_val = 'moderate'
+        elif enhanced_percentage_val >= 20:
+            enhanced_risk_level_val = 'low'
+        elif enhanced_percentage_val >= 5:
+            enhanced_risk_level_val = 'very_low'
+        else:
+            enhanced_risk_level_val = 'minimal'
+
         # Persist assessment to database only if new symptoms came from the form
         if from_form:
             # Remember last selected symptoms regardless of DB write outcome
@@ -928,14 +964,17 @@ def risk_assessment():
             'risk_assessment.html',
             current_risk=current_risk,
             prob_pct=prob_pct,
-            enhanced_percentage=enhanced_percentage,
-            enhanced_risk_level=enhanced_risk_level,
+            enhanced_percentage=enhanced_percentage_val,
+            enhanced_risk_level=enhanced_risk_level_val,
             calc=calc,
             p_dev_pct=round(calc.get('p_dev', 0) * 100),
             p_clinical_pct=p_clinical_pct,
             clinical_counts=clinical['counts'],
             selected_symptoms=symptoms,
             offset_applied=offset_applied,
+            bite_label=bite_label,
+            bite_adjustment=round(bite_adjustment, 1),
+            analysis_id=analysis_id,
             additional_sources=additional_sources,
             hide_nav=False
         )

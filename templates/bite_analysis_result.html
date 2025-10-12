@@ -10,7 +10,7 @@
     <div id="analysisText" class="muted" style="margin-top:8px"></div>
     <div id="analysisStats" class="muted" style="font-size:0.9em"></div>
     <div class="stack" style="margin-top:12px">
-      <a class="btn primary" href="/risk-assessment">View Risk Assessment</a>
+      <a id="riskLink" class="btn primary" href="/risk-assessment">View Risk Assessment</a>
       <a class="btn outline" href="/dashboard">Back to Dashboard</a>
     </div>
   </div>
@@ -103,6 +103,17 @@
               <div>Global red: <strong>${rFrac}%</strong> · Global yellow: <strong>${yFrac}%</strong></div>
               <div>ROI red: <strong>${rFracC}%</strong> · ROI yellow: <strong>${yFracC}%</strong></div>
             `;
+            // Update the Risk Assessment link to carry context forward
+            try{
+              const riskLink = document.getElementById('riskLink');
+              if (riskLink){
+                if (data && data.analysisId){
+                  riskLink.href = '/risk-assessment?aid=' + encodeURIComponent(data.analysisId);
+                } else if (cls === 'red' || cls === 'yellow') {
+                  riskLink.href = '/risk-assessment?bite=' + encodeURIComponent(cls);
+                }
+              }
+            }catch(_){ }
           }catch(_){
             emptyState();
           }
