@@ -1,7 +1,4 @@
-"""
-DengueTect Flask Application - Supabase Version
-Updated to use SQLAlchemy with PostgreSQL instead of JSON files
-"""
+
 
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from datetime import datetime
@@ -18,26 +15,20 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from database import SessionLocal, User, Assessment, BiteAnalysis, Symptom
 
-# Load environment variables from .env file
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
-    pass  # dotenv not available, use system environment variables
+    pass
 
 try:
     from PIL import Image
 except Exception:
     Image = None
 
-# Serve existing Next.js public/ assets at the root path (e.g., /images/dengue-logo.png)
 app = Flask(__name__, static_folder='public', static_url_path='/')
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-
-# Feature flag: call SQL functions in DB for calculations
 USE_DB_FUNCTIONS = (os.getenv('USE_DB_FUNCTIONS', 'false').lower() == 'true')
-
-# Disable caching for dynamic routes to prevent stale results
 @app.after_request
 def add_no_cache_headers(response):
     try:
@@ -48,7 +39,6 @@ def add_no_cache_headers(response):
         pass
     return response
 
-# Base directories for file uploads
 BASE_DIR = os.path.dirname(__file__)
 ANALYSIS_DIR = os.path.join(BASE_DIR, 'data', 'analyses')
 
@@ -90,9 +80,7 @@ def _logit(p):
     """Calculate logit function"""
     return math.log(p / (1.0 - p))
 
-# Enhanced symptom data with weights and categories
 ENHANCED_SYMPTOMS_DATA = {
-    # Core symptoms (CDC common features) - Higher weight
     'fever-high': {'weight': 15, 'category': 'core', 'name': 'High fever (≥38.5°C)'},
     'severe-headache': {'weight': 12, 'category': 'core', 'name': 'Severe headache'},
     'retro-orbital-pain': {'weight': 14, 'category': 'core', 'name': 'Pain behind the eyes'},
@@ -102,12 +90,8 @@ ENHANCED_SYMPTOMS_DATA = {
     'rash': {'weight': 12, 'category': 'core', 'name': 'Skin rash'},
     'fatigue': {'weight': 6, 'category': 'core', 'name': 'Fatigue / weakness'},
     'loss-appetite': {'weight': 4, 'category': 'core', 'name': 'Loss of appetite'},
-    
-    # Additional features (Negative predictors for dengue)
     'no-cough': {'weight': 8, 'category': 'additional', 'name': 'No cough'},
     'no-sore-throat': {'weight': 8, 'category': 'additional', 'name': 'No sore throat'},
-    
-    # Warning signs (WHO/CDC severe dengue indicators) - Highest weight
     'severe-abdominal-pain': {'weight': 20, 'category': 'warning', 'name': 'Severe abdominal pain'},
     'persistent-vomiting': {'weight': 18, 'category': 'warning', 'name': 'Persistent vomiting'},
     'gingival-bleeding': {'weight': 22, 'category': 'warning', 'name': 'Gingival bleeding'},
@@ -120,10 +104,6 @@ ENHANCED_SYMPTOMS_DATA = {
 }
 
 def _compute_enhanced_dengue_probability(symptoms_list):
-    """
-    Enhanced comprehensive dengue probability calculation
-    Returns percentage from 0-100% with detailed breakdown
-    """
     if not symptoms_list:
         return {
             'percentage': 0,
@@ -137,7 +117,6 @@ def _compute_enhanced_dengue_probability(symptoms_list):
             'selected_symptoms': []
         }
     
-    # Calculate weighted scores by category
     core_weight = 0
     warning_weight = 0
     additional_weight = 0
@@ -161,22 +140,13 @@ def _compute_enhanced_dengue_probability(symptoms_list):
     
     total_weight = core_weight + warning_weight + additional_weight
     
-    # Base percentage calculation
-    # Core symptoms: max ~90 points (9 symptoms * ~10 avg weight)
-    # Warning signs: max ~184 points (9 symptoms * ~20 avg weight)  
-    # Additional: max ~16 points (2 symptoms * 8 weight)
-    # Total possible: ~290 points
-    
     base_percentage = min(100, (total_weight / 290) * 100)
     
-    # Apply multipliers based on symptom combinations
     multiplier = 1.0
     
-    # High fever is critical - boost if present
     if 'fever-high' in symptoms_list:
         multiplier += 0.3
     
-    # Multiple warning signs are very concerning
     warning_count = len([s for s in symptoms_list if ENHANCED_SYMPTOMS_DATA.get(s, {}).get('category') == 'warning'])
     if warning_count >= 3:
         multiplier += 0.5
@@ -185,7 +155,6 @@ def _compute_enhanced_dengue_probability(symptoms_list):
     elif warning_count >= 1:
         multiplier += 0.2
     
-    # Core symptom clusters
     core_count = len([s for s in symptoms_list if ENHANCED_SYMPTOMS_DATA.get(s, {}).get('category') == 'core'])
     if core_count >= 6:
         multiplier += 0.4
@@ -194,17 +163,14 @@ def _compute_enhanced_dengue_probability(symptoms_list):
     elif core_count >= 2:
         multiplier += 0.1
     
-    # Respiratory absence (no cough, no sore throat) supports dengue diagnosis
     respiratory_absence = len([s for s in symptoms_list if s in ['no-cough', 'no-sore-throat']])
     if respiratory_absence == 2:
         multiplier += 0.2
     elif respiratory_absence == 1:
         multiplier += 0.1
     
-    # Apply multiplier and cap at 100%
     final_percentage = min(100, base_percentage * multiplier)
     
-    # Determine risk level
     if final_percentage >= 80:
         risk_level = 'very_high'
     elif final_percentage >= 60:
@@ -238,26 +204,18 @@ def _compute_enhanced_dengue_probability(symptoms_list):
     }
 
 def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=None):
-    """
-    Evidence-based logistic model from Fernández et al. (2016):
-    Source: https://pmc.ncbi.nlm.nih.gov/articles/PMC5120437/
-    
-    Now enhanced with comprehensive percentage calculation
-    """
-    # First get the enhanced calculation
+    # enhanced calculation first
     enhanced_result = _compute_enhanced_dengue_probability(symptoms_list)
     
     if USE_DB_FUNCTIONS:
         db = get_db()
         try:
-            # Use database function if available, otherwise compute locally
             result = db.execute(text("SELECT calculate_dengue_probability(:symptoms, :prevalence) as result"), {
                 'symptoms': json.dumps(symptoms_list),
                 'prevalence': target_prevalence or 0.055
             }).fetchone()
             
             if result:
-                # Merge enhanced result with database result
                 db_result = result[0]
                 db_result.update(enhanced_result)
                 return db_result
@@ -266,10 +224,8 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         finally:
             db.close()
     
-    # Fallback to local calculation (original Fernández model)
     s = set(symptoms_list or [])
     
-    # Map inputs (booleans 0/1)
     x = {
         'petechiae': 1 if 'petechiae' in s else 0,
         'retro_ocular_pain': 1 if 'retro-orbital-pain' in s else 0,
@@ -287,7 +243,6 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         'skin_paleness': -0.535,
     }
 
-    # Linear predictor using development (original) model coefficients
     y_dev = (
         coeffs['intercept']
         + coeffs['petechiae'] * x['petechiae']
@@ -298,7 +253,6 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
     )
     p_dev = 1.0 / (1.0 + math.exp(-y_dev))
 
-    # Recalibrate intercept to target pretest prevalence
     dev_prev = 0.71
     logit_offset = 0.0
     pi0 = None
@@ -309,7 +263,6 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
     y = y_dev + logit_offset
     p = 1.0 / (1.0 + math.exp(-y))
 
-    # Model performance as reported
     model_info = {
         'auc': 0.663,
         'auc_ci': (0.616, 0.710),
@@ -357,11 +310,9 @@ def login_required(f):
     return wrapper
 
 def _compute_display_risk(prob, symptoms):
-    """Combine model probability with WHO/CDC warning signs to determine display risk."""
     if USE_DB_FUNCTIONS:
         db = get_db()
         try:
-            # Use database function if available
             result = db.execute(text("SELECT determine_risk_level(:prob, :symptoms) as risk_level"), {
                 'prob': prob,
                 'symptoms': json.dumps(symptoms)
@@ -374,10 +325,8 @@ def _compute_display_risk(prob, symptoms):
         finally:
             db.close()
     
-    # Fallback to local calculation
     s = set(symptoms or [])
     
-    # Base on probability
     if prob >= 0.60:
         base = 'high'
     elif prob >= 0.30:
@@ -395,7 +344,6 @@ def _compute_display_risk(prob, symptoms):
     if wcount == 1 and base == 'low':
         return 'moderate'
     
-    # Core symptom burden (CDC common features)
     core = {
         'fever-high', 'severe-headache', 'retro-orbital-pain', 'myalgia', 'arthralgia', 'rash', 'nausea-vomit'
     }
@@ -408,7 +356,6 @@ def _compute_display_risk(prob, symptoms):
     return base
 
 def _compute_clinical_probability(symptoms, base_prev):
-    """Heuristic clinical-only probability that increases with more core features and warning signs."""
     s = set(symptoms or [])
     core = {
         'fever-high', 'severe-headache', 'retro-orbital-pain', 'myalgia', 'arthralgia', 'rash', 'nausea-vomit'
@@ -422,7 +369,6 @@ def _compute_clinical_probability(symptoms, base_prev):
     rcnt = len(s.intersection(resp_abs))
     wcount = len(s.intersection(warning))
 
-    # Logistic mapping: start at base_prev; each cluster increases log-odds
     b0 = _logit(max(1e-6, min(1-1e-6, base_prev)))
     y = b0 + 0.35 * ccount + 0.40 * rcnt + 0.90 * wcount
     p = 1.0 / (1.0 + math.exp(-y))
@@ -454,15 +400,12 @@ def inject_globals():
 
 @app.route('/', methods=['GET'])
 def index():
-    # If already logged in, go straight to dashboard
     if session.get('logged_in'):
         return redirect(url_for('dashboard'))
-    # Hide header navigation on the login page
     return render_template('index.html', hide_nav=True)
 
 @app.route('/login', methods=['POST'])
 def login():
-    # Basic database-backed login
     email = (request.form.get('email') or '').strip().lower()
     password = request.form.get('password')
     if not email or not password:
@@ -476,14 +419,12 @@ def login():
                 session['logged_in'] = True
                 session['user_id'] = str(user.id)
                 session['email'] = user.email
-                # Update last login
                 user.last_login = datetime.utcnow()
                 db.commit()
                 return redirect(url_for('dashboard'))
             else:
                 return redirect(url_for('index', error='invalid'))
         else:
-            # No account — send user to register flow with prefilled email
             return redirect(url_for('register', email=email))
     finally:
         db.close()
@@ -501,10 +442,8 @@ def logout():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
-        # If already logged in, go to dashboard
         if session.get('logged_in'):
             return redirect(url_for('dashboard'))
-        # Show registration page
         prefill = (request.args.get('email') or '').strip().lower()
         return render_template('register.html', hide_nav=True, email=prefill)
     
@@ -553,7 +492,6 @@ def report_bite():
 def bite_analysis_result():
     return render_template('bite_analysis_result.html', hide_nav=False)
 
-# --- Bite analysis API (same as original) ---
 def _rgb_to_hsv_float(r, g, b):
     """r,g,b in [0,1]; return h in [0,360), s,v in [0,1]."""
     mx = max(r, g, b)
@@ -578,7 +516,6 @@ def _analyze_image_bytes(image_bytes, roi=None):
     if Image is None:
         raise RuntimeError('Pillow not installed')
     im = Image.open(io.BytesIO(image_bytes)).convert('RGB')
-    # Downscale for performance while keeping aspect
     max_w = 200
     w0, h0 = im.size
     if w0 > max_w:
@@ -587,7 +524,6 @@ def _analyze_image_bytes(image_bytes, roi=None):
     w, h = im.size
 
     px = im.load()
-    # ROI to central box
     cx0 = int(w * 0.20); cx1 = int(w * 0.80)
     cy0 = int(h * 0.20); cy1 = int(h * 0.80)
     if isinstance(roi, dict) and 'cx' in roi and 'cy' in roi:
@@ -615,11 +551,9 @@ def _analyze_image_bytes(image_bytes, roi=None):
             g = g8 / 255.0
             b = b8 / 255.0
             h_deg, s, v = _rgb_to_hsv_float(r, g, b)
-            # ignore dark/low-sat; do not add to denominator
             if v < 0.25 or s < 0.18:
                 continue
 
-            # thresholds aligned with client
             isRedHSV = (s >= 0.24 and v >= 0.30) and (h_deg <= 15 or h_deg >= 345)
             isYellowHSV = (s >= 0.22 and v >= 0.45) and (35 <= h_deg <= 70)
             isRedRGB = (r >= 0.45) and ((r - max(g, b)) >= 0.15) and (r / (g + 1e-6) >= 1.25) and (r / (b + 1e-6) >= 1.30)
@@ -673,7 +607,6 @@ def _analyze_image_bytes(image_bytes, roi=None):
         'strongRed': strongRed, 'strongRedC': strongRedC,
     }
 
-    # Decide label
     roiPresent = isinstance(roi, dict) and 'cx' in roi
     rFrac = (red / total) if total else 0.0
     yFrac = (yellow / total) if total else 0.0
@@ -698,9 +631,7 @@ def _analyze_image_bytes(image_bytes, roi=None):
 
 @app.route('/api/analyze-bite', methods=['POST'])
 def api_analyze_bite():
-    """Accept image and optional ROI; return analysis JSON."""
     try:
-        # Parse ROI
         roi = None
         if request.is_json:
             body = request.get_json(silent=True) or {}
@@ -725,7 +656,6 @@ def api_analyze_bite():
 
         stats, res = _analyze_image_bytes(image_bytes, roi=roi)
 
-        # Save image to public/uploads/bites
         up_dir = os.path.join(BASE_DIR, 'public', 'uploads', 'bites')
         os.makedirs(up_dir, exist_ok=True)
         fname = f"{uuid.uuid4().hex}.jpg"
@@ -738,7 +668,6 @@ def api_analyze_bite():
         except Exception:
             image_url = None
 
-        # Save analysis to database
         db = get_db()
         try:
             analysis = BiteAnalysis(
@@ -814,32 +743,26 @@ def api_get_analysis(analysis_id):
 @app.route('/risk-assessment')
 @login_required
 def risk_assessment():
-    # Compute probability using evidence-based logistic model
     symptoms = request.args.getlist('symptoms')
     from_form = len(symptoms) > 0
 
     db = get_db()
     try:
-        # Wrap the main logic to avoid returning a 500 to the user
         try:
             if not from_form:
-                # Reuse last saved assessment's symptoms for this user when directly visiting the page
                 last = _get_last_assessment(db, session.get('user_id'), require_symptoms=True)
                 if last:
                     symptoms = last.symptoms
                 else:
-                    # Fallback to session-stored last symptoms
                     sess_syms = session.get('last_symptoms') or []
                     if sess_syms:
                         symptoms = sess_syms
                     else:
-                        # No prior assessment with symptoms; send user to the form
                         return redirect(url_for('symptom_checker'))
         except Exception as e:
             # Continue with safe defaults; downstream code will handle rendering
             print(f"Risk assessment pre-processing error: {e}")
         
-        # Determine target pretest prevalence
         user_prev = _get_user_pretest_prevalence(db, session.get('user_id'))
         default_prev = 0.055  # Gregory et al. 2010
         target_prev = user_prev if isinstance(user_prev, (int, float)) else default_prev
@@ -848,20 +771,15 @@ def risk_assessment():
         prob = calc.get('p', 0)
         prob_pct = round(prob * 100)
         
-        # Use enhanced percentage calculation
         enhanced_percentage = calc.get('percentage', prob_pct)
         enhanced_risk_level = calc.get('risk_level', 'low')
         
-        # Clinical-only heuristic probability for UX
         clinical = _compute_clinical_probability(symptoms, target_prev)
         p_clinical = clinical['p']
         p_clinical_pct = round(p_clinical * 100)
 
-        # Determine display risk combining probability and CDC/WHO warning signs
         current_risk = _compute_display_risk(prob, symptoms)
 
-        # Optional: incorporate bite analysis result into enhanced percentage
-        # Accept either a direct label via ?bite=red|yellow or an analysis ID via ?aid=<uuid>
         bite_label = (request.args.get('bite') or '').strip().lower() or None
         analysis_id = (request.args.get('aid') or '').strip() or None
         if (not bite_label) and analysis_id:
@@ -873,7 +791,6 @@ def risk_assessment():
             except Exception as e:
                 print(f"Bite analysis lookup failed: {e}")
 
-        # Compute additive boost to enhanced UI percentage based on bite color
         bite_adjustment = 0.0
         if bite_label == 'red':
             bite_adjustment = 12.0  # stronger boost for red/pink area
@@ -882,7 +799,6 @@ def risk_assessment():
 
         enhanced_percentage_val = float(calc.get('percentage', prob_pct))
         enhanced_percentage_val = min(100.0, round(enhanced_percentage_val + bite_adjustment, 1))
-        # Map adjusted percentage back to risk level buckets used by the enhanced UI
         if enhanced_percentage_val >= 80:
             enhanced_risk_level_val = 'very_high'
         elif enhanced_percentage_val >= 60:
@@ -896,15 +812,12 @@ def risk_assessment():
         else:
             enhanced_risk_level_val = 'minimal'
 
-        # Persist assessment to database only if new symptoms came from the form
         if from_form:
-            # Remember last selected symptoms regardless of DB write outcome
             try:
                 session['last_symptoms'] = list(symptoms)
             except Exception:
                 pass
 
-            # Safely persist assessment; never crash the request
             try:
                 raw_user_id = session.get('user_id')
                 if raw_user_id:
@@ -942,7 +855,6 @@ def risk_assessment():
                     pass
                 print(f"Error saving assessment to database: {e}")
 
-        # Provide additional variables for template transparency
         additional_sources = [
             {'title': 'WHO Fact Sheet: Dengue and severe dengue', 'url': 'https://www.who.int/news-room/fact-sheets/detail/dengue-and-severe-dengue'},
             {'title': 'WHO 2009 Dengue Guidelines (Handbook)', 'url': 'https://apps.who.int/iris/handle/10665/44188'},
@@ -952,7 +864,6 @@ def risk_assessment():
             {'title': 'PAHO – Dengue', 'url': 'https://www.paho.org/en/topics/dengue'},
         ]
         
-        # Prepare a safe numeric offset for template
         try:
             offset_applied = float((calc.get('model_info', {})
                                      .get('prevalence', {})
@@ -979,7 +890,6 @@ def risk_assessment():
             hide_nav=False
         )
     except Exception as e:
-        # Log and render a safe fallback instead of a 500
         try:
             db.rollback()
         except Exception:
@@ -1036,7 +946,6 @@ def profile():
                     except ValueError:
                         pass
                 
-                # Optional avatar upload
                 try:
                     file = request.files.get('avatar')
                     if file and getattr(file, 'filename', ''):
@@ -1082,7 +991,6 @@ def settings():
 @app.route('/settings/prevalence', methods=['POST'])
 @login_required
 def update_prevalence():
-    """Update user-specific pretest prevalence from settings form."""
     val = request.form.get('pretest_prevalence', '').strip()
     if not val:
         return redirect(url_for('settings'))
@@ -1110,11 +1018,9 @@ def update_prevalence():
 
 @app.route('/api/symptom-combinations', methods=['GET'])
 def api_symptom_combinations():
-    """Get comprehensive symptom combination data"""
     try:
         import itertools
         
-        # Get single symptom percentages
         single_symptoms = []
         for symptom, data in ENHANCED_SYMPTOMS_DATA.items():
             result = _compute_enhanced_dengue_probability([symptom])
@@ -1127,14 +1033,11 @@ def api_symptom_combinations():
                 'risk_level': result['risk_level']
             })
         
-        # Sort by percentage (highest first)
         single_symptoms.sort(key=lambda x: x['percentage'], reverse=True)
         
-        # Get high risk combinations (60%+)
         all_symptoms = list(ENHANCED_SYMPTOMS_DATA.keys())
         high_risk_combos = []
         
-        # Check combinations up to 4 symptoms for high risk
         for r in range(1, 5):
             for combo in itertools.combinations(all_symptoms, r):
                 result = _compute_enhanced_dengue_probability(list(combo))
@@ -1147,16 +1050,12 @@ def api_symptom_combinations():
                         'risk_level': result['risk_level']
                     })
         
-        # Sort by percentage (highest first)
         high_risk_combos.sort(key=lambda x: x['percentage'], reverse=True)
         
-        # Get all symptoms result
         all_symptoms_result = _compute_enhanced_dengue_probability(all_symptoms)
         
-        # Generate key combinations
         key_combinations = []
         
-        # Core symptoms only
         core_symptoms = [s for s, data in ENHANCED_SYMPTOMS_DATA.items() if data['category'] == 'core']
         result = _compute_enhanced_dengue_probability(core_symptoms)
         key_combinations.append({
@@ -1166,7 +1065,6 @@ def api_symptom_combinations():
             'risk_level': result['risk_level']
         })
         
-        # Warning signs only
         warning_symptoms = [s for s, data in ENHANCED_SYMPTOMS_DATA.items() if data['category'] == 'warning']
         result = _compute_enhanced_dengue_probability(warning_symptoms)
         key_combinations.append({
@@ -1176,7 +1074,6 @@ def api_symptom_combinations():
             'risk_level': result['risk_level']
         })
         
-        # Classic dengue presentation
         classic_dengue = ['fever-high', 'severe-headache', 'retro-orbital-pain', 'myalgia', 'nausea-vomit']
         result = _compute_enhanced_dengue_probability(classic_dengue)
         key_combinations.append({
@@ -1186,7 +1083,6 @@ def api_symptom_combinations():
             'risk_level': result['risk_level']
         })
         
-        # Severe dengue indicators
         severe_dengue = ['fever-high', 'severe-abdominal-pain', 'persistent-vomiting', 'gingival-bleeding', 'petechiae']
         result = _compute_enhanced_dengue_probability(severe_dengue)
         key_combinations.append({
@@ -1214,7 +1110,6 @@ def api_symptom_combinations():
 
 @app.route('/api/calculate-risk', methods=['POST'])
 def api_calculate_risk():
-    """Calculate risk for specific symptom combination"""
     try:
         data = request.get_json()
         symptoms = data.get('symptoms', [])
@@ -1233,11 +1128,8 @@ def api_calculate_risk():
         return {'ok': False, 'error': str(e)}, 500
 
 if __name__ == '__main__':
-    # Run with: python app_supabase.py
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
     port = int(os.getenv('PORT', 5000))
-
-    # Print both desktop and mobile testing URLs (once, even with the reloader)
     if (not debug_mode) or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -1248,12 +1140,9 @@ if __name__ == '__main__':
                 s.close()
         except Exception:
             lan_ip = None
-
         desktop_url = f'http://localhost:{port}'
         mobile_url = f'http://{lan_ip}:{port}' if lan_ip else f'http://<your-lan-ip>:{port}'
         print('\nDengueTect server starting...')
         print(f'  Desktop: {desktop_url}')
         print(f'  Mobile (same Wi-Fi): {mobile_url}')
-        print('  Tip: If it does not open on your phone, ensure both devices are on the same network and allow the Windows Firewall prompt for Python/Flask.\n')
-
     app.run(host='0.0.0.0', port=port, debug=debug_mode)

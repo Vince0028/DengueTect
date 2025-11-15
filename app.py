@@ -14,11 +14,9 @@ try:
 except Exception:
     Image = None
 
-# Serve existing Next.js public/ assets at the root path (e.g., /images/dengue-logo.png)
 app = Flask(__name__, static_folder='public', static_url_path='/')
-app.secret_key = 'dev-secret-key'  # NOTE: replace with a secure key for production
+app.secret_key = 'dev-secret-key'
 
-# Disable caching for dynamic routes to prevent stale results
 @app.after_request
 def add_no_cache_headers(response):
     try:
@@ -29,7 +27,7 @@ def add_no_cache_headers(response):
         pass
     return response
 
-# Simple JSON DB path
+ 
 BASE_DIR = os.path.dirname(__file__)
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 DB_PATH = os.path.join(DATA_DIR, 'db.json')
@@ -39,7 +37,7 @@ ANALYSIS_DIR = os.path.join(DATA_DIR, 'analyses')
 def _ensure_db():
     os.makedirs(DATA_DIR, exist_ok=True)
     if not os.path.exists(DB_PATH):
-        # Seed with sources metadata
+        
         seed = {
             "users": [],
             "assessments": [],
@@ -51,9 +49,7 @@ def _ensure_db():
                 },
                 "created_at": datetime.utcnow().isoformat() + 'Z',
                 "defaults": {
-                    # Default target pretest prevalence for suspected dengue among febrile patients
-                    # Puerto Rico enhanced surveillance (2007–2008): 108/1955 lab-positive (~5.5%)
-                    # Source: Gregory et al., 2010 (AJTMH) https://pmc.ncbi.nlm.nih.gov/articles/PMC2861403/
+                    
                     "pretest_prevalence": 0.055,
                     "prevalence_source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2861403/"
                 }
@@ -67,7 +63,7 @@ def _load_db():
     _ensure_db()
     with open(DB_PATH, 'r', encoding='utf-8') as f:
         db = json.load(f)
-    # Ensure defaults exist for backward compatibility
+    
     meta = db.setdefault('meta', {})
     sources = meta.setdefault('sources', {})
     sources.setdefault('fernandez2016', 'https://pmc.ncbi.nlm.nih.gov/articles/PMC5120437/')
@@ -98,7 +94,7 @@ def _create_user(db, email, password):
         "password_hash": generate_password_hash(password),
         "created_at": datetime.utcnow().isoformat() + 'Z',
         "settings": {
-            # Users can override this later via settings UI (future improvement)
+            
             "pretest_prevalence": db.get('meta', {}).get('defaults', {}).get('pretest_prevalence', 0.055)
         }
     }
@@ -108,7 +104,6 @@ def _create_user(db, email, password):
 
 
 def _get_user_pretest_prevalence(db):
-    """Return user-specific pretest prevalence if set, otherwise None."""
     uid = session.get('user_id')
     if not uid:
         return None
@@ -119,8 +114,6 @@ def _get_user_pretest_prevalence(db):
 
 
 def _get_last_assessment(db, user_id, require_symptoms=True):
-    """Return the most recent assessment for a user. If require_symptoms is True,
-    skip records without a non-empty symptoms list."""
     latest = None
     for rec in db.get('assessments', []):
         if rec.get('user_id') != user_id:
@@ -137,15 +130,6 @@ def _logit(p):
 
 
 def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=None):
-    """
-    Evidence-based logistic model from Fernández et al. (2016):
-    Source: https://pmc.ncbi.nlm.nih.gov/articles/PMC5120437/
-    Equation: y = 0.694 + 0.718(petechiae) + 0.516(retro-ocular pain) + 0.316(gingival bleeding)
-                     - 0.474(epistaxis) - 0.535(skin paleness)
-    Probability p = 1/(1+exp(-y))
-
-    Note: Only symptoms present in the equation are used here. Others are collected for context.
-    """
     s = set(symptoms_list or [])
 
     # Map inputs (booleans 0/1)
@@ -225,9 +209,6 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         'model_info': model_info
     }
 
-# --- Enhanced percentage-based assessment (complements the published model) ---
-# Symptom weights and categories used to compute an intuitive percentage that grows
-# with more dengue-consistent symptoms and warning signs.
 ENHANCED_SYMPTOMS_DATA = {
     'fever-high': {'weight': 15, 'category': 'core', 'name': 'High fever (≥38.5°C)'},
     'severe-headache': {'weight': 12, 'category': 'core', 'name': 'Severe headache'},
@@ -342,7 +323,6 @@ def _compute_enhanced_dengue_percentage(symptoms_list):
     }
 
 
-# Simple login-required decorator for pages that should tie to user accounts
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -353,14 +333,6 @@ def login_required(f):
 
 
 def _compute_display_risk(prob, symptoms):
-    """Combine model probability with WHO/CDC warning signs to determine display risk.
-    Rules:
-      - Probability thresholds: >=0.60 -> high, >=0.30 -> moderate.
-      - Escalate based on warning signs (counts):
-          * severe-abdominal-pain, persistent-vomiting, gingival-bleeding, epistaxis,
-            blood-in-vomit-stool, lethargy-restlessness, rapid-breathing, skin-paleness
-        If >=2 warning signs -> high; if >=1 -> at least moderate.
-    """
     s = set(symptoms or [])
     # Base on probability
     if prob >= 0.60:
@@ -392,10 +364,6 @@ def _compute_display_risk(prob, symptoms):
 
 
 def _compute_clinical_probability(symptoms, base_prev):
-    """Heuristic clinical-only probability that increases with more core features and warning signs.
-    IMPORTANT: This is not a validated model; it is a monotonic heuristic for UI feedback.
-    We anchor the intercept to the chosen pretest prevalence so the baseline matches context.
-    """
     s = set(symptoms or [])
     core = {
         'fever-high', 'severe-headache', 'retro-orbital-pain', 'myalgia', 'arthralgia', 'rash', 'nausea-vomit'
@@ -443,16 +411,13 @@ def inject_globals():
 
 @app.route('/', methods=['GET'])
 def index():
-    # If already logged in, go straight to dashboard
     if session.get('logged_in'):
         return redirect(url_for('dashboard'))
-    # Hide header navigation on the login page
     return render_template('index.html', hide_nav=True)
 
 
 @app.route('/login', methods=['POST'])
 def login():
-    # Basic JSON-backed login (demo only; not production-grade)
     email = (request.form.get('email') or '').strip().lower()
     password = request.form.get('password')
     if not email or not password:
@@ -467,10 +432,8 @@ def login():
             session['email'] = user['email']
             return redirect(url_for('dashboard'))
         else:
-            # Invalid password
             return redirect(url_for('index', error='invalid'))
     else:
-        # No account — send user to register flow with prefilled email
         return redirect(url_for('register', email=email))
 
 
@@ -488,11 +451,8 @@ def logout():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
-        # If already logged in, go to dashboard
         if session.get('logged_in'):
             return redirect(url_for('dashboard'))
-        # Show registration page
-        # We pass hide_nav=True to keep focus on the form, similar to login
         prefill = (request.args.get('email') or '').strip().lower()
         return render_template('register.html', hide_nav=True, email=prefill)
     # POST
@@ -520,7 +480,6 @@ def dashboard():
 
 @app.route('/education')
 def education():
-    # Redirect to the primary education page to avoid the intermediate hub
     return redirect(url_for('education_what_is_dengue'))
 
 
@@ -544,9 +503,7 @@ def bite_analysis_result():
     return render_template('bite_analysis_result.html', hide_nav=False)
 
 
-# --- Bite analysis API ---
 def _rgb_to_hsv_float(r, g, b):
-    """r,g,b in [0,1]; return h in [0,360), s,v in [0,1]."""
     mx = max(r, g, b)
     mn = min(r, g, b)
     d = mx - mn
@@ -691,10 +648,7 @@ def _analyze_image_bytes(image_bytes, roi=None):
 
 @app.route('/api/analyze-bite', methods=['POST'])
 def api_analyze_bite():
-    """Accept image (multipart or JSON data URL) and optional ROI; return analysis JSON.
-    JSON body keys: imageDataUrl (data URL), roi {cx,cy,r}. Multipart: file field 'image', optional form 'roi'."""
     try:
-        # Parse ROI
         roi = None
         if request.is_json:
             body = request.get_json(silent=True) or {}
@@ -719,7 +673,6 @@ def api_analyze_bite():
 
         stats, res = _analyze_image_bytes(image_bytes, roi=roi)
 
-        # Save image to public/uploads/bites
         up_dir = os.path.join(BASE_DIR, 'public', 'uploads', 'bites')
         os.makedirs(up_dir, exist_ok=True)
         fname = f"{uuid.uuid4().hex}.jpg"
@@ -732,7 +685,6 @@ def api_analyze_bite():
         except Exception:
             image_url = None
 
-        # Persist analysis record to disk for robust mobile navigation
         try:
             os.makedirs(ANALYSIS_DIR, exist_ok=True)
         except Exception:
@@ -782,25 +734,20 @@ def api_get_analysis(analysis_id):
 @app.route('/risk-assessment')
 @login_required
 def risk_assessment():
-    # Compute probability using evidence-based logistic model (Fernández et al., 2016)
     symptoms = request.args.getlist('symptoms')
     from_form = len(symptoms) > 0
 
     db = _load_db()
     if not from_form:
-        # Reuse last saved assessment's symptoms for this user when directly visiting the page
         last = _get_last_assessment(db, session.get('user_id'), require_symptoms=True)
         if last:
             symptoms = last.get('symptoms', [])
         else:
-            # Fallback to session-stored last symptoms
             sess_syms = session.get('last_symptoms') or []
             if sess_syms:
                 symptoms = sess_syms
             else:
-                # No prior assessment with symptoms; send user to the form
                 return redirect(url_for('symptom_checker'))
-    # Determine target pretest prevalence: user setting if available, else global default
     user_prev = _get_user_pretest_prevalence(db)
     default_prev = db.get('meta', {}).get('defaults', {}).get('pretest_prevalence', 0.055)
     target_prev = user_prev if isinstance(user_prev, (int, float)) else default_prev
@@ -808,18 +755,13 @@ def risk_assessment():
     calc = _compute_dengue_probability_from_symptoms(symptoms, target_prevalence=target_prev)
     prob = calc['p']
     prob_pct = round(prob * 100)
-    # Enhanced comprehensive percentage for UI
     enhanced = _compute_enhanced_dengue_percentage(symptoms)
-    # Clinical-only heuristic probability for UX (non-validated)
     clinical = _compute_clinical_probability(symptoms, target_prev)
     p_clinical = clinical['p']
     p_clinical_pct = round(p_clinical * 100)
 
-    # Determine display risk combining probability and CDC/WHO warning signs
     current_risk = _compute_display_risk(prob, symptoms)
 
-    # Optional: incorporate bite analysis result into enhanced percentage
-    # Accept either a direct label via ?bite=red|yellow or an analysis ID via ?aid=<id>
     bite_label = (request.args.get('bite') or '').strip().lower() or None
     analysis_id = (request.args.get('aid') or '').strip() or None
     if (not bite_label) and analysis_id:
@@ -834,7 +776,6 @@ def risk_assessment():
         except Exception:
             bite_label = bite_label or None
 
-    # Compute additive boost to enhanced UI percentage based on bite color
     bite_adjustment = 0.0
     if bite_label == 'red':
         bite_adjustment = 12.0  # stronger boost for red/pink area
@@ -843,7 +784,6 @@ def risk_assessment():
 
     enhanced_percentage_val = float(enhanced.get('percentage', prob_pct))
     enhanced_percentage_val = min(100.0, round(enhanced_percentage_val + bite_adjustment, 1))
-    # Map adjusted percentage back to risk level buckets used by the enhanced UI
     if enhanced_percentage_val >= 80:
         enhanced_risk_level_val = 'very_high'
     elif enhanced_percentage_val >= 60:
@@ -857,7 +797,6 @@ def risk_assessment():
     else:
         enhanced_risk_level_val = 'minimal'
 
-    # Persist assessment to JSON DB only if new symptoms came from the form
     if from_form:
         try:
             session['last_symptoms'] = list(symptoms)
@@ -885,7 +824,6 @@ def risk_assessment():
         db.setdefault('assessments', []).append(record)
         _save_db(db)
 
-    # Provide additional variables for template transparency
     additional_sources = [
         { 'title': 'WHO Fact Sheet: Dengue and severe dengue', 'url': 'https://www.who.int/news-room/fact-sheets/detail/dengue-and-severe-dengue' },
         { 'title': 'WHO 2009 Dengue Guidelines (Handbook)', 'url': 'https://apps.who.int/iris/handle/10665/44188' },
@@ -931,7 +869,6 @@ def symptom_checker():
 def profile():
     db = _load_db()
     uid = session.get('user_id')
-    # Find current user
     user = None
     for u in db.get('users', []):
         if u.get('id') == uid:
@@ -946,7 +883,6 @@ def profile():
             prof['phone'] = phone
             prof['location'] = location
             prof['birthdate'] = birthdate
-            # Optional avatar upload
             try:
                 file = request.files.get('avatar')
             except Exception:
@@ -994,8 +930,6 @@ def settings():
 @app.route('/settings/prevalence', methods=['POST'])
 @login_required
 def update_prevalence():
-    """Update user-specific pretest prevalence from settings form.
-    Accepts either a fraction (0-1) or percentage (0-100)."""
     val = request.form.get('pretest_prevalence', '').strip()
     if not val:
         return redirect(url_for('settings'))
@@ -1020,27 +954,20 @@ def update_prevalence():
 
 
 if __name__ == '__main__':
-    # Run with: python app.py  or  py app.py
     debug_mode = True
-
-    # Print both desktop and mobile testing URLs (once, even with the reloader)
     if (not debug_mode) or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             try:
-                # Doesn't actually send data; just used to discover the preferred outbound IP
                 s.connect(('8.8.8.8', 80))
                 lan_ip = s.getsockname()[0]
             finally:
                 s.close()
         except Exception:
             lan_ip = None
-
         desktop_url = 'http://localhost:5000'
         mobile_url = f'http://{lan_ip}:5000' if lan_ip else 'http://<your-lan-ip>:5000'
         print('\nDengueTect server starting...')
         print(f'  Desktop: {desktop_url}')
         print(f'  Mobile (same Wi-Fi): {mobile_url}')
-        print('  Tip: If it does not open on your phone, ensure both devices are on the same network and allow the Windows Firewall prompt for Python/Flask.\n')
-
     app.run(host='0.0.0.0', port=5000, debug=debug_mode)

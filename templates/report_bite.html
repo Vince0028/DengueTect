@@ -13,8 +13,7 @@
           <p class="muted">No image selected</p>
           <small class="muted">Drag & drop a photo here</small>
         </div>
-        <img id="preview-img" class="dropzone-preview hidden" alt="Preview" />
-        <!-- Inline camera lives inside the dropzone so no extra frame -->
+  <img id="preview-img" class="dropzone-preview hidden" alt="Preview" />
         <video id="cameraVideo" class="dropzone-video hidden" autoplay playsinline muted></video>
         <div id="colorIndicator" class="color-indicator muted" style="position:absolute;bottom:8px;right:8px;z-index:2;pointer-events:none">Detecting color…</div>
         <div id="debugOverlay" class="color-indicator muted" style="position:absolute;bottom:36px;right:8px;z-index:2;pointer-events:none;font-size:11px;line-height:1.2"></div>
@@ -29,7 +28,6 @@
         <button class="btn outline full" id="btn-gallery"><i class="bi bi-upload me-2"></i>Upload from Gallery</button>
       </div>
 
-      <!-- Controls shown only while camera is active -->
       <div id="camera-controls" class="row gap hidden" style="margin-top:12px">
         <button type="button" class="btn outline" id="btn-cancel-camera">Cancel</button>
         <button type="button" class="btn primary" id="btn-capture"><i class="bi bi-camera me-2"></i>Capture</button>
