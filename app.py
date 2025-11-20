@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+from flask import send_from_directory
 from datetime import datetime
 import os
 import json
@@ -136,12 +137,19 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
     x = {
         'petechiae': 1 if 'petechiae' in s else 0,
         'retro_ocular_pain': 1 if 'retro-orbital-pain' in s else 0,
+    dist_dir = os.path.join(BASE_DIR, 'landing_page', 'dist')
         'gingival_bleeding': 1 if 'gingival-bleeding' in s or 'bleeding-gums-nose' in s else 0,
         'epistaxis': 1 if 'epistaxis' in s or 'bleeding-gums-nose' in s else 0,
-        'skin_paleness': 1 if 'skin-paleness' in s else 0,
-    }
-
-    coeffs = {
+    def landing_page():
+        # If already authenticated send user to dashboard
+        if session.get('logged_in'):
+            return redirect(url_for('dashboard'))
+        # Serve the built React landing page (run `npm run build` inside `landing_page` first)
+        index_path = os.path.join(dist_dir, 'index.html')
+        if os.path.exists(index_path):
+            return send_from_directory(dist_dir, 'index.html')
+        # Fallback: show existing login page if build not yet performed
+        return render_template('index.html', hide_nav=True)
         'intercept': 0.694,
         'petechiae': 0.718,
         'retro_ocular_pain': 0.516,
@@ -149,7 +157,7 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         'epistaxis': -0.474,
         'skin_paleness': -0.535,
     }
-
+    def login_required(f):
     # Linear predictor using development (original) model coefficients
     y_dev = (
         coeffs['intercept']
@@ -327,7 +335,7 @@ def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         if not session.get('logged_in'):
-            return redirect(url_for('index'))
+            return redirect(url_for('login'))
         return f(*args, **kwargs)
     return wrapper
 
@@ -417,11 +425,16 @@ def index():
 
 
 @app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'GET':
+        if session.get('logged_in'):
+            return redirect(url_for('dashboard'))
+        return render_template('index.html', hide_nav=True)
     email = (request.form.get('email') or '').strip().lower()
     password = request.form.get('password')
     if not email or not password:
-        return redirect(url_for('index', error='invalid'))
+        return redirect(url_for('login', error='invalid'))
 
     db = _load_db()
     user = _get_user_by_email(db, email)
@@ -432,11 +445,12 @@ def login():
             session['email'] = user['email']
             return redirect(url_for('dashboard'))
         else:
-            return redirect(url_for('index', error='invalid'))
+            return redirect(url_for('login', error='invalid'))
     else:
         return redirect(url_for('register', email=email))
 
 
+@app.route('/logout')
 @app.route('/logout')
 def logout():
     try:
@@ -445,7 +459,7 @@ def logout():
         session.pop('logged_in', None)
         session.pop('user_id', None)
         session.pop('email', None)
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 
 
 @app.route('/register', methods=['GET', 'POST'])

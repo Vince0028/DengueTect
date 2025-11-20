@@ -1,6 +1,6 @@
 
 
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
 from datetime import datetime
 import os
 import json
@@ -41,6 +41,7 @@ def add_no_cache_headers(response):
 
 BASE_DIR = os.path.dirname(__file__)
 ANALYSIS_DIR = os.path.join(BASE_DIR, 'data', 'analyses')
+dist_dir = os.path.join(BASE_DIR, 'landing_page', 'dist')
 
 def get_db():
     """Get database session"""
@@ -305,7 +306,7 @@ def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         if not session.get('logged_in'):
-            return redirect(url_for('index'))
+            return redirect(url_for('login'))
         return f(*args, **kwargs)
     return wrapper
 
@@ -399,17 +400,34 @@ def inject_globals():
     }
 
 @app.route('/', methods=['GET'])
-def index():
+def landing_page():
     if session.get('logged_in'):
         return redirect(url_for('dashboard'))
-    return render_template('index.html', hide_nav=True)
+    # Serve the built React landing page with 3D animations
+    index_path = os.path.join(dist_dir, 'index.html')
+    if os.path.exists(index_path):
+        return send_from_directory(dist_dir, 'index.html')
+    # Fallback to static HTML if build doesn't exist
+    return render_template('landing_static.html')
 
-@app.route('/login', methods=['POST'])
+@app.route('/assets/<path:filename>')
+def landing_assets(filename):
+    # Serve built Vite assets (JS, CSS, etc.)
+    assets_path = os.path.join(dist_dir, 'assets')
+    if os.path.exists(os.path.join(assets_path, filename)):
+        return send_from_directory(assets_path, filename)
+    return ('Not found', 404)
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'GET':
+        if session.get('logged_in'):
+            return redirect(url_for('dashboard'))
+        return render_template('index.html', hide_nav=True)
     email = (request.form.get('email') or '').strip().lower()
     password = request.form.get('password')
     if not email or not password:
-        return redirect(url_for('index', error='invalid'))
+        return redirect(url_for('login', error='invalid'))
 
     db = get_db()
     try:
@@ -423,7 +441,7 @@ def login():
                 db.commit()
                 return redirect(url_for('dashboard'))
             else:
-                return redirect(url_for('index', error='invalid'))
+                return redirect(url_for('login', error='invalid'))
         else:
             return redirect(url_for('register', email=email))
     finally:
@@ -437,7 +455,7 @@ def logout():
         session.pop('logged_in', None)
         session.pop('user_id', None)
         session.pop('email', None)
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
