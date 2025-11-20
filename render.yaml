@@ -2,7 +2,7 @@ services:
   - type: web
     name: denguetect
     runtime: python
-    buildCommand: ./build.sh
+    buildCommand: chmod +x build.sh && ./build.sh
     startCommand: gunicorn --bind 0.0.0.0:$PORT app_supabase:app
     envVars:
       - key: PYTHON_VERSION
