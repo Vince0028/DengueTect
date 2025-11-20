@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: denguetect
+    runtime: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app_supabase:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.4
+      - key: NODE_VERSION
+        value: 20
