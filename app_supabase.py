@@ -778,7 +778,7 @@ def risk_assessment():
                     else:
                         return redirect(url_for('symptom_checker'))
         except Exception as e:
-            # Continue with safe defaults; downstream code will handle rendering
+            
             print(f"Risk assessment pre-processing error: {e}")
         
         user_prev = _get_user_pretest_prevalence(db, session.get('user_id'))
