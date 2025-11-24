@@ -412,7 +412,7 @@ def landing_page():
 
 @app.route('/assets/<path:filename>')
 def landing_assets(filename):
-    # Serve built Vite assets (JS, CSS, etc.)
+    
     assets_path = os.path.join(dist_dir, 'assets')
     if os.path.exists(os.path.join(assets_path, filename)):
         return send_from_directory(assets_path, filename)
