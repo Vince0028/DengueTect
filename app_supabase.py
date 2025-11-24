@@ -842,7 +842,7 @@ def risk_assessment():
                     try:
                         user_uuid = uuid.UUID(str(raw_user_id))
                     except Exception:
-                        user_uuid = raw_user_id  # fallback; SQLAlchemy may coerce if already UUID
+                        user_uuid = raw_user_id  
 
                     assessment = Assessment(
                         user_id=user_uuid,
