@@ -813,7 +813,7 @@ def risk_assessment():
         if bite_label == 'red':
             bite_adjustment = 12.0  
         elif bite_label == 'yellow':
-            bite_adjustment = 5.0   # mild boost for yellowish area
+            bite_adjustment = 5.0   
 
         enhanced_percentage_val = float(calc.get('percentage', prob_pct))
         enhanced_percentage_val = min(100.0, round(enhanced_percentage_val + bite_adjustment, 1))
