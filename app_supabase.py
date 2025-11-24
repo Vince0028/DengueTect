@@ -403,7 +403,7 @@ def inject_globals():
 def landing_page():
     if session.get('logged_in'):
         return redirect(url_for('dashboard'))
-    # Serve the built React landing page with 3D animations
+    
     index_path = os.path.join(dist_dir, 'index.html')
     if os.path.exists(index_path):
         return send_from_directory(dist_dir, 'index.html')
