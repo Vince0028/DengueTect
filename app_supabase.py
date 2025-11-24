@@ -286,7 +286,7 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         }
     }
     
-    # Merge original model with enhanced results
+    
     original_result = {
         'y_dev': y_dev,
         'y': y,
