@@ -782,7 +782,7 @@ def risk_assessment():
             print(f"Risk assessment pre-processing error: {e}")
         
         user_prev = _get_user_pretest_prevalence(db, session.get('user_id'))
-        default_prev = 0.055  # Gregory et al. 2010
+        default_prev = 0.055  
         target_prev = user_prev if isinstance(user_prev, (int, float)) else default_prev
 
         calc = _compute_dengue_probability_from_symptoms(symptoms, target_prevalence=target_prev)
