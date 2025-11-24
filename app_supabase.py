@@ -297,7 +297,7 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         'model_info': model_info
     }
     
-    # Combine both results
+    
     original_result.update(enhanced_result)
     return original_result
 
