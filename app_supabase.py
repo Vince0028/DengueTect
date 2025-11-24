@@ -802,7 +802,7 @@ def risk_assessment():
         analysis_id = (request.args.get('aid') or '').strip() or None
         if (not bite_label) and analysis_id:
             try:
-                # Fetch from database if available
+                
                 analysis = db.query(BiteAnalysis).filter(BiteAnalysis.id == analysis_id).first()
                 if analysis and analysis.label_class and analysis.label_class.lower() in ('red', 'yellow'):
                     bite_label = analysis.label_class.lower()
