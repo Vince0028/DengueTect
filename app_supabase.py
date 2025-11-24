@@ -205,7 +205,7 @@ def _compute_enhanced_dengue_probability(symptoms_list):
     }
 
 def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=None):
-    # enhanced calculation first
+    
     enhanced_result = _compute_enhanced_dengue_probability(symptoms_list)
     
     if USE_DB_FUNCTIONS:
