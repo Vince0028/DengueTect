@@ -301,7 +301,7 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
     original_result.update(enhanced_result)
     return original_result
 
-# Simple login-required decorator for pages that should tie to user accounts
+
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
