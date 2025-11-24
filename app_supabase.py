@@ -811,7 +811,7 @@ def risk_assessment():
 
         bite_adjustment = 0.0
         if bite_label == 'red':
-            bite_adjustment = 12.0  # stronger boost for red/pink area
+            bite_adjustment = 12.0  
         elif bite_label == 'yellow':
             bite_adjustment = 5.0   # mild boost for yellowish area
 
