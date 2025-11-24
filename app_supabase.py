@@ -465,7 +465,7 @@ def register():
         prefill = (request.args.get('email') or '').strip().lower()
         return render_template('register.html', hide_nav=True, email=prefill)
     
-    # POST
+    
     email = (request.form.get('email') or '').strip().lower()
     password = request.form.get('password') or ''
     confirm = request.form.get('confirm') or ''
