@@ -981,7 +981,7 @@ def profile():
                 db.commit()
             return redirect(url_for('profile'))
         
-        # GET
+        
         email = session.get('email') or (user.email if user else '')
         phone = user.phone if user else ''
         location = user.location if user else ''
