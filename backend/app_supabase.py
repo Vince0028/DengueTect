@@ -17,7 +17,7 @@ from database import SessionLocal, User, Assessment, BiteAnalysis, Symptom
 
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 except ImportError:
     pass
 
@@ -26,7 +26,7 @@ try:
 except Exception:
     Image = None
 
-app = Flask(__name__, static_folder='public', static_url_path='/')
+app = Flask(__name__, static_folder='../frontend/public', static_url_path='/')
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 USE_DB_FUNCTIONS = (os.getenv('USE_DB_FUNCTIONS', 'false').lower() == 'true')
 @app.after_request
@@ -41,7 +41,7 @@ def add_no_cache_headers(response):
 
 BASE_DIR = os.path.dirname(__file__)
 ANALYSIS_DIR = os.path.join(BASE_DIR, 'data', 'analyses')
-dist_dir = os.path.join(BASE_DIR, 'landing_page', 'dist')
+dist_dir = os.path.join(BASE_DIR, '..', 'landing_page', 'dist')
 
 def get_db():
     """Get database session"""

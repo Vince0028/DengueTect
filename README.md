@@ -101,11 +101,11 @@ Follow these steps to set up the project locally.
 ### Running the Application
 
 1.  **Start the Server**:
-    Run the following command in your terminal from the project root:
+    Navigate to the backend directory and run the app:
     ```powershell
+    cd backend
     python app.py
     ```
-    *(Note: You can also use `py app.py` on Windows)*
 
 2.  **Access the App**:
     Open your browser and navigate to:
@@ -121,15 +121,17 @@ Follow these steps to set up the project locally.
 
 ```
 DengueTect/
-├── app.py                  # Main application entry point
-├── app_supabase.py         # Alternative entry point (Supabase integration)
-├── requirements.txt        # Python dependencies
-├── templates/              # HTML Templates (Frontend)
-├── public/                 # Static assets (CSS, JS, Images)
-├── data/                   # Local database storage
-│   ├── db.json             # Main data file
-│   └── analyses/           # Analyzed image results
-└── landing_page/           # Original React landing page implementation
+├── backend/                # Flask Backend & Logic
+│   ├── app.py              # Main application entry point
+│   ├── database.py         # Database models
+│   ├── data/               # Local database storage
+│   └── templates/          # HTML Templates
+├── frontend/               # Next.js Frontend Source
+│   ├── app/                # App Router
+│   ├── components/         # React Components
+│   └── public/             # Static assets
+├── landing_page/           # Landing page build source
+└── README.md               # Documentation
 ```
 
 ---

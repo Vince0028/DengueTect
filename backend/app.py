@@ -15,7 +15,7 @@ try:
 except Exception:
     Image = None
 
-app = Flask(__name__, static_folder='public', static_url_path='/')
+app = Flask(__name__, static_folder='../frontend/public', static_url_path='/')
 app.secret_key = 'dev-secret-key'
 
 @app.after_request
@@ -137,19 +137,12 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
     x = {
         'petechiae': 1 if 'petechiae' in s else 0,
         'retro_ocular_pain': 1 if 'retro-orbital-pain' in s else 0,
-    dist_dir = os.path.join(BASE_DIR, 'landing_page', 'dist')
         'gingival_bleeding': 1 if 'gingival-bleeding' in s or 'bleeding-gums-nose' in s else 0,
         'epistaxis': 1 if 'epistaxis' in s or 'bleeding-gums-nose' in s else 0,
-    def landing_page():
-        
-        if session.get('logged_in'):
-            return redirect(url_for('dashboard'))
-        
-        index_path = os.path.join(dist_dir, 'index.html')
-        if os.path.exists(index_path):
-            return send_from_directory(dist_dir, 'index.html')
-        
-        return render_template('index.html', hide_nav=True)
+        'skin_paleness': 1 if 'skin-paleness' in s else 0,
+    }
+
+    coeffs = {
         'intercept': 0.694,
         'petechiae': 0.718,
         'retro_ocular_pain': 0.516,
@@ -157,8 +150,6 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         'epistaxis': -0.474,
         'skin_paleness': -0.535,
     }
-    def login_required(f):
-    
     y_dev = (
         coeffs['intercept']
         + coeffs['petechiae'] * x['petechiae']
