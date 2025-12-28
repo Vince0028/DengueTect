@@ -32,3 +32,5 @@ next-env.d.ts
 
 # local data
 data/db.json
+**/db.json
+backend/data/
