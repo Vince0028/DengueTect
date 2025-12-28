@@ -41,27 +41,27 @@ const InteractiveScanner: React.FC = () => {
             </motion.p>
         </div>
 
-        {/* Phone Frame - 3D Container */}
+        {}
         <motion.div 
             className="relative w-[280px] h-[560px] md:w-[320px] md:h-[640px] preserve-3d"
             initial={{ rotateY: 0 }}
             whileInView={{ rotateY: [0, -10, 10, 0] }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         >
-            {/* The Phone Device */}
+            {}
             <div className="absolute inset-0 bg-[#1e293b] rounded-[2.5rem] md:rounded-[3rem] border-[6px] md:border-[8px] border-[#334155] shadow-[0_0_60px_-15px_rgba(22,163,74,0.5)] overflow-hidden backface-hidden">
                 
-                {/* Dynamic Island */}
+                {}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-24 md:h-7 md:w-28 bg-black rounded-b-2xl z-30" />
 
-                {/* Screen Content */}
+                {}
                 <div className="relative h-full w-full bg-dengue-dark flex flex-col font-sans">
                     
-                    {/* Viewport */}
+                    {}
                     <div className="relative flex-1 bg-[url('https://images.unsplash.com/photo-1550666610-27c225d613b2?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-90">
                         <div className="absolute inset-0 bg-dengue-primary/10 mix-blend-overlay" />
                         
-                        {/* Scanning UI */}
+                        {}
                         {!scanComplete && (
                             <>
                                 <motion.div 
@@ -77,7 +77,7 @@ const InteractiveScanner: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Bottom Placeholder (Always visible) */}
+                    {}
                     <div className="h-20 md:h-24 bg-dengue-base border-t border-white/5 p-4 md:p-6 flex justify-center items-center">
                         {!scanComplete && (
                             <div className="text-slate-500 text-xs font-mono animate-pulse">Scanning...</div>
@@ -86,7 +86,7 @@ const InteractiveScanner: React.FC = () => {
                 </div>
             </div>
 
-            {/* 3D Pop-Out Result Card */}
+            {}
             <motion.div
                 initial={{ z: 0, y: 100, opacity: 0, scale: 0.8 }}
                 animate={scanComplete ? { z: 60, y: -140, opacity: 1, scale: 1 } : { z: 0, y: 100, opacity: 0, scale: 0.8 }}

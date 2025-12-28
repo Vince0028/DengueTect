@@ -16,12 +16,12 @@ const App: React.FC = () => {
   return (
     <div className="relative min-h-screen bg-dengue-dark text-slate-200 selection:bg-dengue-primary selection:text-white overflow-hidden">
       
-      {/* Biological / Cell Background Effect */}
+      {}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* Base Gradient */}
+        {}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#064e3b] via-dengue-dark to-black opacity-40" />
         
-        {/* Floating Cells (Simulating Vanta) */}
+        {}
         <motion.div style={{ y: y1 }} className="absolute top-0 left-0 w-full h-full opacity-20">
             {[...Array(8)].map((_, i) => (
                 <div 
@@ -40,7 +40,7 @@ const App: React.FC = () => {
             ))}
         </motion.div>
 
-        {/* Mesh Grid overlay */}
+        {}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10" />
       </div>
 

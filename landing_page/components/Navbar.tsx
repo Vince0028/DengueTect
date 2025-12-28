@@ -30,7 +30,7 @@ const Navbar: React.FC = () => {
           }
         `}>
           
-          {/* Brand */}
+          {}
           <a href="#" className="flex items-center gap-2 group">
             <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-dengue-primary to-dengue-dark border border-dengue-glow/30 overflow-hidden">
               <div className="absolute inset-0 bg-dengue-glow/20 blur opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -41,7 +41,7 @@ const Navbar: React.FC = () => {
             </span>
           </a>
 
-          {/* Desktop Navigation - Center aligned */}
+          {}
           <div className="hidden md:flex items-center gap-1 bg-dengue-light/30 rounded-full px-2 py-1 border border-white/5">
             {['Features', 'How it Works', 'Pricing', 'Education'].map((item) => (
               <a 
@@ -54,7 +54,7 @@ const Navbar: React.FC = () => {
             ))}
           </div>
 
-          {/* Actions */}
+          {}
           <div className="hidden md:flex items-center gap-4">
             <a href="/login" className="text-sm font-semibold text-slate-300 hover:text-white transition-colors">
               Login
@@ -65,14 +65,14 @@ const Navbar: React.FC = () => {
             </a>
           </div>
 
-          {/* Mobile Toggle */}
+          {}
           <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-white p-2">
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </motion.nav>
 
-      {/* Mobile Menu Overlay */}
+      {}
       <AnimatePresence>
         {isOpen && (
           <motion.div 

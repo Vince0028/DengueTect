@@ -63,7 +63,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="space-y-4">
-          {/* User Info Card */}
+          {}
           <Card className="border-emerald-200 dark:border-gray-700 dark:bg-gray-800">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center justify-between dark:text-white">
@@ -182,7 +182,7 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Password Change Section */}
+          {}
           <Card className="border-emerald-200 dark:border-gray-700 dark:bg-gray-800">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center dark:text-white">
@@ -278,7 +278,7 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Permissions Control */}
+          {}
           <Button
             variant="outline"
             className="w-full justify-start bg-transparent dark:text-white dark:border-gray-600"
@@ -286,7 +286,7 @@ export default function ProfilePage() {
             PERMISSIONS CONTROL
           </Button>
 
-          {/* Privacy & Terms */}
+          {}
           <Button
             variant="outline"
             className="w-full justify-start bg-transparent dark:text-white dark:border-gray-600"
@@ -294,7 +294,7 @@ export default function ProfilePage() {
             PRIVACY & TERMS
           </Button>
 
-          {/* Logout Button */}
+          {}
           <Button onClick={handleLogout} className="w-full bg-red-500 hover:bg-red-600 text-white">
             <LogOut className="mr-2 h-4 w-4" />
             LOG OUT

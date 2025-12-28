@@ -9,7 +9,7 @@ const Features: React.FC = () => {
     offset: ["start end", "end start"]
   });
 
-  // Less aggressive tilt on mobile
+  
   const tilt = useTransform(scrollYProgress, [0, 0.5, 1], [2, 0, -2]);
 
   return (
@@ -46,7 +46,7 @@ const Features: React.FC = () => {
 
         <div className="grid md:grid-cols-12 gap-6 perspective-1000">
           
-          {/* Feature 1: Main Large Card - Bite Analysis */}
+          {}
           <motion.div 
             style={{ rotateX: tilt }}
             className="md:col-span-8 glass-card-strong rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-14 overflow-hidden relative group min-h-[400px] md:min-h-[500px] flex flex-col justify-between preserve-3d transition-all duration-300"
@@ -71,7 +71,7 @@ const Features: React.FC = () => {
               </div>
             </div>
 
-            {/* 3D Visual Element - Scaled down for mobile */}
+            {}
             <div className="absolute right-0 bottom-0 translate-x-1/3 translate-y-1/3 md:translate-x-1/4 md:translate-y-1/4 w-[250px] h-[250px] md:w-[400px] md:h-[400px] preserve-3d group-hover:translate-x-1/4 group-hover:translate-y-1/4 transition-transform duration-700" style={{ transform: "translateZ(20px)" }}>
                  <div className="absolute inset-0 border border-dengue-primary/20 rounded-full animate-[spin_20s_linear_infinite]" />
                  <div className="absolute inset-4 border border-dashed border-dengue-primary/20 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
@@ -81,10 +81,10 @@ const Features: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Side Column */}
+          {}
           <div className="md:col-span-4 flex flex-col gap-6 perspective-1000">
               
-              {/* Feature 2: Symptom Checker */}
+              {}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -107,7 +107,7 @@ const Features: React.FC = () => {
                 </div>
               </motion.div>
 
-              {/* Feature 3: Risk Dashboard */}
+              {}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}

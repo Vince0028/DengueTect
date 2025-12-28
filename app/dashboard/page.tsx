@@ -9,13 +9,13 @@ export default function DashboardPage() {
 
       <main className="container mx-auto px-4 py-6 max-w-md">
         <div className="space-y-6">
-          {/* Welcome Section */}
+          {}
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground mb-2">Welcome to DengueTect</h1>
             <p className="text-muted-foreground">Your AI-powered dengue pre-screening companion</p>
           </div>
 
-          {/* Main Features */}
+          {}
           <div className="grid gap-4">
             <FeatureCard
               icon={<Camera className="h-6 w-6" />}
@@ -40,7 +40,7 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Educational Hub */}
+          {}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-foreground">Educational Hub</h2>
 

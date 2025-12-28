@@ -28,7 +28,7 @@ const Pricing: React.FC = () => {
 
         <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto items-stretch">
           
-          {/* Free Tier */}
+          {}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -51,7 +51,7 @@ const Pricing: React.FC = () => {
             </button>
           </motion.div>
 
-          {/* Pro Tier - Unique Glowing Style */}
+          {}
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -79,7 +79,7 @@ const Pricing: React.FC = () => {
             </button>
           </motion.div>
 
-          {/* Enterprise */}
+          {}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

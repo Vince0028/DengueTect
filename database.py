@@ -81,29 +81,29 @@ class Assessment(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     
-    # Assessment data
+    
     symptoms = Column(JSONB, nullable=False, default=list)
     model = Column(String(50), default='fernandez2016')
     
-    # Calculation results
+    
     probability = Column(DECIMAL(10, 8), nullable=False)
     probability_dev = Column(DECIMAL(10, 8))
     clinical_probability = Column(DECIMAL(10, 8))
     
-    # Model inputs and coefficients
+    
     model_inputs = Column(JSONB)
     model_coefficients = Column(JSONB)
     model_info = Column(JSONB)
     
-    # Risk level determination
-    risk_level = Column(String(20), nullable=False)  # low, moderate, high
     
-    # Metadata
+    risk_level = Column(String(20), nullable=False)  
+    
+    
     pretest_prevalence = Column(DECIMAL(5, 4))
     target_prevalence = Column(DECIMAL(5, 4))
     logit_offset_applied = Column(DECIMAL(10, 8))
     
-    # Relationships
+    
     user = relationship("User", back_populates="assessments")
 
 class BiteAnalysis(Base):
@@ -113,18 +113,18 @@ class BiteAnalysis(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     
-    # Image data
+    
     image_url = Column(Text)
     image_filename = Column(String(255))
     image_size_bytes = Column(Integer)
     image_width = Column(Integer)
     image_height = Column(Integer)
     
-    # Analysis results
+    
     label_text = Column(String(255), nullable=False)
     label_class = Column(String(20), nullable=False)
     
-    # Color analysis statistics
+    
     red_pixels = Column(Integer, default=0)
     yellow_pixels = Column(Integer, default=0)
     total_pixels = Column(Integer, default=0)
@@ -136,15 +136,15 @@ class BiteAnalysis(Base):
     strong_red_pixels = Column(Integer, default=0)
     strong_red_center_pixels = Column(Integer, default=0)
     
-    # Region of Interest (ROI) data
+    
     roi_center_x = Column(DECIMAL(10, 8))
     roi_center_y = Column(DECIMAL(10, 8))
     roi_radius = Column(DECIMAL(10, 8))
     
-    # Analysis metadata
+    
     analysis_stats = Column(JSONB)
     
-    # Relationships
+    
     user = relationship("User", back_populates="bite_analyses")
 
 class UserSession(Base):

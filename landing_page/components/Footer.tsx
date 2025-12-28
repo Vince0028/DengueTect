@@ -5,12 +5,12 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-[#050a14] pt-12 pb-8 border-t border-white/5 relative overflow-hidden">
       
-      {/* Background Grid */}
+      {}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(22,163,74,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(22,163,74,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
       
       <div className="container mx-auto px-6 relative z-10">
         
-        {/* Console Header - Full Width Status Ticker */}
+        {}
         <div className="mb-10 pb-6 border-b border-white/5">
             <div className="w-full bg-[#0f172a] border border-white/10 rounded-full h-10 flex items-center overflow-hidden relative">
                 <div className="flex animate-ticker whitespace-nowrap items-center text-xs font-mono text-slate-400">
@@ -28,10 +28,10 @@ const Footer: React.FC = () => {
             </div>
         </div>
 
-        {/* Console Grid */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
             
-            {/* Col 1: Brand */}
+            {}
             <div className="md:col-span-1 space-y-4">
                 <div className="font-display font-bold text-2xl text-white">
                     Dengue<span className="text-dengue-glow">Tect</span>
@@ -48,7 +48,7 @@ const Footer: React.FC = () => {
                 </div>
             </div>
 
-            {/* Col 2: Quick Access (Styled as Dashboard Buttons) */}
+            {}
             <div className="md:col-span-2 grid grid-cols-2 gap-4">
                 {[
                     { label: "Features", code: "F-01" },
@@ -65,7 +65,7 @@ const Footer: React.FC = () => {
                 ))}
             </div>
 
-            {/* Col 3: Newsletter / Status */}
+            {}
             <div className="md:col-span-1 bg-[#0b1220] p-5 rounded-xl border border-white/10">
                 <div className="flex items-center gap-2 mb-4 text-xs font-mono text-slate-400">
                     <Wifi className="w-4 h-4" />
@@ -86,7 +86,7 @@ const Footer: React.FC = () => {
             </div>
         </div>
 
-        {/* Footer Bottom */}
+        {}
         <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/5 text-xs text-slate-600 font-mono">
             <div>&copy; 2025 DENGUETECT INC. ALL RIGHTS RESERVED.</div>
             <div className="flex gap-6 mt-4 md:mt-0">

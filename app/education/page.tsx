@@ -33,7 +33,7 @@ export default function EducationPage() {
         </div>
 
         <div className="space-y-6">
-          {/* What is Dengue Section */}
+          {}
           <section id="dengue">
           <Card className="border-emerald-200 dark:border-gray-700 dark:bg-gray-800">
             <CardHeader className="pb-3">
@@ -95,7 +95,7 @@ export default function EducationPage() {
           </Card>
           </section>
 
-          {/* Prevention Tips */}
+          {}
           <Card className="border-emerald-200 dark:border-gray-700 dark:bg-gray-800">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center dark:text-white">
@@ -136,7 +136,7 @@ export default function EducationPage() {
             </CardContent>
           </Card>
 
-          {/* Local Health Services */}
+          {}
           <section id="services">
           <Card className="border-emerald-200 dark:border-gray-700 dark:bg-gray-800">
             <CardHeader className="pb-3">
@@ -150,7 +150,7 @@ export default function EducationPage() {
                 Find nearby healthcare facilities and emergency contacts in your area.
               </p>
 
-              {/* Emergency Contacts */}
+              {}
               <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
                 <h4 className="font-medium text-red-800 dark:text-red-300 mb-2 flex items-center">
                   <Phone className="mr-2 h-4 w-4" />
@@ -168,7 +168,7 @@ export default function EducationPage() {
                 </div>
               </div>
 
-              {/* Nearby Facilities */}
+              {}
               <div className="space-y-3">
                 <h4 className="font-medium dark:text-white">Nearby Health Centers</h4>
 

@@ -18,10 +18,10 @@ const Hero: React.FC = () => {
       <div className="container mx-auto px-6 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           
-          {/* Left Content */}
+          {}
           <div className="max-w-2xl relative z-20 pt-8 lg:pt-0 text-center lg:text-left">
             
-            {/* Decorative Glow */}
+            {}
             <div className="absolute -top-32 -left-32 w-64 h-64 md:w-96 md:h-96 bg-dengue-primary/10 rounded-full blur-[80px] md:blur-[120px]" />
 
             <motion.h1
@@ -62,15 +62,15 @@ const Hero: React.FC = () => {
             </motion.div>
           </div>
 
-          {/* Right Visual - 3D Exploded Stack */}
+          {}
           <div className="relative h-[400px] md:h-[600px] w-full flex items-center justify-center perspective-2000 mt-8 lg:mt-0">
              
-             {/* 3D Container */}
+             {}
              <motion.div 
                 style={{ rotateX, rotateY, scale }}
                 className="relative w-64 md:w-72 h-[400px] md:h-[500px] preserve-3d transition-transform duration-100 ease-out scale-90 md:scale-100"
              >
-                {/* Layer 1: Backplate */}
+                {}
                 <motion.div 
                     initial={{ z: 0, opacity: 0 }}
                     animate={{ z: -80, opacity: 0.5 }}
@@ -80,7 +80,7 @@ const Hero: React.FC = () => {
                      <div className="w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 rounded-[24px] md:rounded-[32px]" />
                 </motion.div>
 
-                {/* Layer 2: Data Grid */}
+                {}
                 <motion.div 
                     initial={{ z: 0, opacity: 0 }}
                     animate={{ z: -40, opacity: 0.8 }}
@@ -94,20 +94,20 @@ const Hero: React.FC = () => {
                      </div>
                 </motion.div>
 
-                {/* Layer 3: Main Interface */}
+                {}
                 <motion.div 
                      initial={{ z: 0 }}
                      animate={{ z: 20 }}
                      transition={{ duration: 1.5 }}
                      className="absolute inset-0 bg-[#0f172a] border border-white/10 rounded-[24px] md:rounded-[32px] shadow-2xl overflow-hidden flex flex-col"
                 >
-                     {/* Header */}
+                     {}
                      <div className="h-12 md:h-14 border-b border-white/5 flex items-center justify-between px-6 bg-white/5">
                         <div className="w-12 h-1.5 bg-white/10 rounded-full" />
                         <Activity className="w-4 h-4 text-dengue-glow" />
                      </div>
 
-                     {/* Screen Content */}
+                     {}
                      <div className="flex-1 p-4 md:p-6 relative flex flex-col">
                         <div className="relative w-full h-40 md:h-48 rounded-xl md:rounded-2xl overflow-hidden mb-4 md:mb-6 bg-slate-800">
                             <div className="absolute inset-0 bg-gradient-to-br from-dengue-primary/20 to-transparent mix-blend-overlay z-10" />
@@ -116,7 +116,7 @@ const Hero: React.FC = () => {
                                 className="w-full h-full object-cover opacity-80 grayscale" 
                                 alt="Analysis"
                             />
-                            {/* Scanning Line */}
+                            {}
                             <motion.div 
                                 animate={{ top: ['0%', '100%', '0%'] }}
                                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
@@ -137,7 +137,7 @@ const Hero: React.FC = () => {
                      </div>
                 </motion.div>
 
-                {/* Layer 4: Pop-out Elements */}
+                {}
                 <motion.div 
                     initial={{ z: 0, opacity: 0 }}
                     animate={{ z: 80, opacity: 1 }}

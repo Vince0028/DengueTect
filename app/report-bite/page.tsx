@@ -14,7 +14,7 @@ export default function ReportBitePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [indicator, setIndicator] = useState<{ text: string; cls: "red" | "yellow" | "muted" } | null>(null)
   const [debugStats, setDebugStats] = useState<{ rFrac: number; yFrac: number; rFracC: number; yFracC: number } | null>(null)
-  // Tap-to-focus Region Of Interest (ROI), normalized coords [0..1]
+  
   const [roi, setRoi] = useState<{ cx: number; cy: number; r: number } | null>(null)
 
   const imgRef = useRef<HTMLImageElement | null>(null)
@@ -34,14 +34,14 @@ export default function ReportBitePage() {
 
   const handleAnalyze = () => {
     setIsAnalyzing(true)
-    // Simulate AI analysis
+    
     setTimeout(() => {
       setIsAnalyzing(false)
       router.push("/bite-analysis-result")
     }, 3000)
   }
 
-  // --- Color detection helpers (robust red/yellow & pinkish) ---
+  
   function rgbToHsv(r: number, g: number, b: number) {
     const max = Math.max(r, g, b), min = Math.min(r, g, b)
     const d = max - min
@@ -67,11 +67,11 @@ export default function ReportBitePage() {
     const arr = img.data
     const w = img.width || 0, h = img.height || 0
 
-    // Default central box when no explicit ROI: 20%..80%
+    
     const defaultCx0 = Math.floor(w * 0.20), defaultCx1 = Math.ceil(w * 0.80)
     const defaultCy0 = Math.floor(h * 0.20), defaultCy1 = Math.ceil(h * 0.80)
 
-    // If ROI provided, convert normalized center and radius to box coords
+    
     let rx0 = defaultCx0, rx1 = defaultCx1, ry0 = defaultCy0, ry1 = defaultCy1
     if (roiBox) {
       const rc = Math.max(8, Math.floor(Math.min(w, h) * (roiBox.r || 0.25)))
@@ -87,13 +87,13 @@ export default function ReportBitePage() {
         const r = arr[idx] / 255, g = arr[idx + 1] / 255, b = arr[idx + 2] / 255
 
         const { h: hue, s, v } = rgbToHsv(r, g, b)
-        // HSV conditions (broader ranges + relaxed S/V)
+        
         const isRedHSV = (s >= 0.22 && v >= 0.18) && (hue <= 15 || hue >= 345)
         const isYellowHSV = (s >= 0.20 && v >= 0.25) && (hue >= 25 && hue <= 75)
-        // RGB dominance conditions
+        
         const isRedRGB = (r >= 0.35) && (r - Math.max(g, b) >= 0.10) && (r / (g + 1e-6) >= 1.30) && (r / (b + 1e-6) >= 1.30)
         const isYellowRGB = (r >= 0.30 && g >= 0.30 && b <= 0.45) && (Math.min(r, g) / Math.max(r, g) >= 0.75) && ((r - b) >= 0.08) && ((g - b) >= 0.08)
-        // Pinkish: low saturation red tones with bright value (e.g., rash on skin)
+        
         const isPinkish = (v >= 0.6 && s >= 0.10 && s <= 0.40) && (hue <= 20 || hue >= 340) && (r > g && r > b)
 
         let isRed = isRedHSV || isRedRGB || isPinkish
@@ -118,8 +118,8 @@ export default function ReportBitePage() {
     const rFrac = red / total, yFrac = yellow / total
     const rFracC = centerTotal ? (redC / centerTotal) : 0
     const yFracC = centerTotal ? (yellowC / centerTotal) : 0
-    const minFrac = 0.005 // 0.5% global
-    const centerMinFrac = 0.01 // 1% ROI
+    const minFrac = 0.005 
+    const centerMinFrac = 0.01 
     if ((rFrac >= minFrac && rFrac >= yFrac) || (rFracC >= centerMinFrac)) return { text: "Detected: red/pink area", cls: "red" as const }
     if ((yFrac >= minFrac) || (yFracC >= centerMinFrac)) return { text: "Detected: yellowish area", cls: "yellow" as const }
     return { text: "No clear red/yellow detected", cls: "muted" as const }
@@ -128,7 +128,7 @@ export default function ReportBitePage() {
   const analyzeNow = useCallback(() => {
     const el = imgRef.current
     if (!el) return
-    // Downscale for performance
+    
     const w = 200
     const ratio = el.naturalWidth / (el.naturalHeight || 1)
     const h = Math.max(1, Math.round(w / (ratio || 1)))
@@ -154,7 +154,7 @@ export default function ReportBitePage() {
   }, [roi])
 
   useEffect(() => {
-    // Re-run when image changes or ROI changes
+    
     analyzeNow()
   }, [selectedImage, roi, analyzeNow])
 
@@ -162,9 +162,9 @@ export default function ReportBitePage() {
     const rect = e.currentTarget.getBoundingClientRect()
     const cx = (e.clientX - rect.left) / rect.width
     const cy = (e.clientY - rect.top) / rect.height
-    // r = 0.25 of min dimension in normalized units (approx)
+    
     setRoi({ cx, cy, r: 0.25 })
-    // After setting ROI, analysis will re-run via useEffect
+    
   }
 
   const resetRoi = () => setRoi(null)
@@ -241,7 +241,7 @@ export default function ReportBitePage() {
                     onLoad={() => analyzeNow()}
                     onClick={onImageClick}
                   />
-                  {/* Tap-to-focus ROI ring */}
+                  {}
                   {roi && (
                     <div
                       className="pointer-events-none absolute border-2 border-red-400/80 rounded-full shadow"
@@ -253,7 +253,7 @@ export default function ReportBitePage() {
                       }}
                     />
                   )}
-                  {/* Indicator and debug overlay */}
+                  {}
                   <div className="absolute bottom-2 right-2 flex flex-col items-end gap-1">
                     {indicator && (
                       <div
@@ -271,7 +271,7 @@ export default function ReportBitePage() {
                       </div>
                     )}
                   </div>
-                  {/* Hint */}
+                  {}
                   <div className="absolute top-2 left-2 text-[10px] px-2 py-1 rounded bg-black/40 text-white">
                     Tap the rash to focus detection
                   </div>

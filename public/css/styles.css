@@ -1,4 +1,4 @@
-/* Gradient text application (dark only) */
+
 [data-theme="dark"] main.container h1,
 [data-theme="dark"] main.container h2,
 [data-theme="dark"] main.container h3,
@@ -11,14 +11,14 @@
 [data-theme="dark"] main.container label{background-image:none;-webkit-background-clip:initial;background-clip:initial;color:var(--fg)}
 [data-theme="dark"] .brand-title{background-image:linear-gradient(135deg,#ffffff,#a7f3d0);-webkit-background-clip:text;background-clip:text;color:transparent}
 [data-theme="dark"] .app-nav a span{background-image:linear-gradient(135deg,#ffffff,#d1fae5);-webkit-background-clip:text;background-clip:text;color:transparent}
-/* Keep regular text readable in dark mode (no gradient fill) */
+
 [data-theme="dark"] a,
 [data-theme="dark"] span,
 [data-theme="dark"] small,
 [data-theme="dark"] code,
 [data-theme="dark"] th,
 [data-theme="dark"] td{background-image:none;-webkit-background-clip:initial;background-clip:initial;color:var(--fg)}
-/* Keep key UI readable (no gradient text) */
+
 [data-theme="dark"] .btn,
 [data-theme="dark"] .badge,
 [data-theme="dark"] .pill-list li{background-image:none;-webkit-background-clip:initial;background-clip:initial;color:var(--fg)}
@@ -36,33 +36,33 @@
 [data-theme="dark"] .card details span{background-image:none !important;-webkit-background-clip:initial;background-clip:initial;color:#ffffff}
 [data-theme="dark"] .card details .muted{color:#e2e8f0}
 [data-theme="dark"] .brand-sub{background-image:linear-gradient(135deg,#bbf7d0,#86efac);-webkit-background-clip:text;background-clip:text;color:transparent}
-/* Dashboard metrics and footer */
+
 [data-theme="dark"] .circle-center{background-image:linear-gradient(135deg,#ffffff,#bbf7d0);-webkit-background-clip:text;background-clip:text;color:transparent}
 [data-theme="dark"] .footer *,[data-theme="dark"] .footer small{background-image:linear-gradient(135deg,#ffffff,#bbf7d0);-webkit-background-clip:text;background-clip:text;color:transparent}
 html,body{height:100%}
 body{min-height:100vh;display:flex;flex-direction:column}
 main.container{flex:1 0 auto}
-/* Vanta background container */
+
 #vanta-bg{position:fixed;inset:0;z-index:0;pointer-events:none}
 .app-header, main.container, .footer{position:relative;z-index:1}
 #bg-overlay{position:fixed;inset:0;z-index:0;pointer-events:none;display:block;background:rgba(2,6,23,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-/* Reduce intensity anywhere the overlay exists (all pages with nav) */
+
 body:has(#bg-overlay) #vanta-bg{filter:brightness(.88) saturate(.95)}
-/* Avatar button */
+
 .avatar-btn{width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center}
 .avatar-img{width:32px;height:32px;border-radius:50%;object-fit:cover}
 .hidden-input{display:none}
 .hidden{display:none !important}
 :root{--bg:#ffffff;--fg:#0f172a;--muted:#475569;--primary:#16a34a;--primary-contrast:#ffffff;--border:#e2e8f0;--card:#f8fafc;--soft:#ecfdf5;--footer-bg:#065f46;--grad-start:#16a34a;--grad-end:#4ade80;--grad-text-start:#0f172a;--grad-text-end:#166534;--danger:#ef4444;--green:#16a34a;--orange:#ea580c;--red:#dc2626;--link:#16a34a;--link-hover:#166534;--grad-muted-start:#166534;--grad-muted-end:#15803d;--grad-card-start:#166534;--grad-card-end:#16a34a}
-/* Dark theme variables */
+
 [data-theme="dark"]{--bg:#0b1220;--fg:#e2e8f0;--muted:#94a3b8;--primary:#16a34a;--primary-contrast:#ffffff;--border:#1f2937;--card:#0f172a;--soft:#052e1d;--footer-bg:#064e3b;--grad-start:#22c55e;--grad-end:#4ade80;--grad-text-start:#bbf7d0;--grad-text-end:#86efac;--link:#86efac;--link-hover:#bbf7d0;--grad-muted-start:#064e3b;--grad-muted-end:#166534;--grad-card-start:#064e3b;--grad-card-end:#15803d}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:var(--bg);color:var(--fg)}a{color:inherit;text-decoration:none}
-/* Distinguish content links from nav/buttons: make links blue in main content */
-/* Make content links blue, but exclude CTA cards and navigation */
+
+
 main.container a:not(.btn):not(.card):not(.link){color:var(--link);text-decoration:underline;text-underline-offset:2px}
 main.container a:not(.btn):not(.card):not(.link):hover{color:var(--link-hover)}
 main.container a:not(.btn):not(.card):not(.link):visited{color:var(--link)}
-/* Ensure dashboard/CTA cards keep their original appearance */
+
 main.container a.card.link{color:inherit !important;text-decoration:none !important}
 main.container a.card.link:hover{color:inherit !important}
 .container{max-width:720px;margin:0 auto;padding:16px}
@@ -91,11 +91,11 @@ main.container a.card.link:hover{color:inherit !important}
   .card.glass .card-title{color:#e2e8f0}
   .card.glass .btn.outline{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.22);color:#e2e8f0}
   .card.glass .divider{color:#cbd5e1}
-  /* Muted gradient buttons for auth forms (login/register) */
+  
   .card.glass .btn.primary{background:linear-gradient(135deg,var(--grad-muted-start),var(--grad-muted-end));border-color:transparent;color:var(--primary-contrast);box-shadow:0 6px 16px rgba(22,101,52,.22)}
   .card.glass .btn.primary:hover{filter:brightness(1.02);transform:translateY(-1px);box-shadow:0 8px 20px rgba(22,101,52,.28)}
   .card.glass .btn.primary:active{filter:brightness(0.98);transform:translateY(0);box-shadow:0 4px 12px rgba(22,101,52,.20)}
-  /* Gradient card variant (hero/section headers) */
+  
   .card.gradient{background:linear-gradient(135deg,var(--grad-card-start),var(--grad-card-end));border-color:transparent;color:var(--primary-contrast);box-shadow:0 10px 26px rgba(34,197,94,.28)}
   .card.gradient .page-title,
   .card.gradient .section-title,
@@ -130,12 +130,12 @@ main.container a.card.link:hover{color:inherit !important}
 .dropzone-preview{max-width:100%;max-height:320px;border-radius:10px;display:block}
 .dropzone-preview.hidden{display:none}
 .dropzone.has-image .dropzone-inner{display:none}
-/* Inline camera inside dropzone */
+
 .dropzone-video{max-width:100%;max-height:320px;border-radius:10px;display:block;background:#000}
 .dropzone-video.hidden{display:none}
 .dropzone.camera-on .dropzone-inner{display:none}
 .dropzone.camera-on .dropzone-preview{display:none}
-/* Focus box overlay for camera double-tap */
+
 .focus-box{position:absolute;width:88px;height:88px;border:2px solid #22c55e;border-radius:12px;left:0;top:0;transform:translate(-50%,-50%);pointer-events:none;opacity:0;z-index:3}
 .focus-box.show{animation:focus-pop .24s ease-out, focus-fade .8s ease-out .24s forwards}
 @keyframes focus-pop{from{opacity:0;transform:translate(-50%,-50%) scale(1.25)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
@@ -161,7 +161,7 @@ main.container a.card.link:hover{color:inherit !important}
 .btn.full{width:100%}
 .btn.linkback{margin-top:12px}
 .form{display:grid;gap:10px}
-/* Ensure form labels are left-aligned even inside centered cards */
+
 .form label{display:block;text-align:left;margin:0 0 4px}
 .card.center .form{ text-align:left }
 input[type="text"],input[type="email"],input[type="password"],input[type="date"]{padding:10px;border:1px solid var(--border);border-radius:8px;width:100%}
@@ -195,12 +195,12 @@ input[type="text"],input[type="email"],input[type="password"],input[type="date"]
 .bar-fill{display:block;height:100%;background:#22c55e}
 .bar-fill.green{background:#22c55e}.bar-fill.orange{background:#f97316}.bar-fill.red{background:#ef4444}
 .pct{font-weight:600}
-/* Dark theme components */
+
 [data-theme="dark"] body{background:var(--bg);color:var(--fg)}
 [data-theme="dark"] .card{background:var(--card);border-color:var(--border)}
 [data-theme="dark"] .card.gradient{background:linear-gradient(135deg,var(--grad-card-start),var(--grad-card-end));color:var(--primary-contrast)}
 [data-theme="dark"] .card.white{background:#ffffff !important;border-color:#e2e8f0 !important;color:#0f172a}
-/* Inside forced white cards, turn off gradient text for headings and ensure readable colors */
+
 [data-theme="dark"] .card.white h1,
 [data-theme="dark"] .card.white h2,
 [data-theme="dark"] .card.white h3,
@@ -217,9 +217,9 @@ input[type="text"],input[type="email"],input[type="password"],input[type="date"]
 [data-theme="dark"] .card.white .text,
 [data-theme="dark"] .card.white .pct{color:#0f172a}
 [data-theme="dark"] .card.white .muted{color:#475569}
-/* Light progress track inside white cards for clarity */
+
 [data-theme="dark"] .card.white .bar{background:#e5e7eb}
-/* Darker green links for readability on white */
+
 [data-theme="dark"] .card.white a:not(.btn):not(.card):not(.link){color:#166534}
 [data-theme="dark"] .card.white a:not(.btn):not(.card):not(.link):hover{color:#065f46}
 [data-theme="dark"] .card{background:linear-gradient(180deg,rgba(34,197,94,.08),rgba(134,239,172,.08)) padding-box, var(--card);}
@@ -246,20 +246,20 @@ input[type="text"],input[type="email"],input[type="password"],input[type="date"]
 [data-theme="dark"] .circle .bg{stroke:#1f2937}
 [data-theme="dark"] .chev{color:var(--muted)}
 [data-theme="dark"] .logo-large{filter:none}
-/* Dark dropdown */
+
 [data-theme="dark"] .dropdown-menu{background:var(--card);color:var(--fg);border-color:var(--border)}
 [data-theme="dark"] .dropdown-item{color:var(--fg)}
 [data-theme="dark"] .dropdown-item:hover{background:rgba(255,255,255,.05)}
 .dropdown-item .bi{font-size:1rem}
-/* Camera modal */
+
 .camera-video{width:100%;border-radius:12px;background:#000}
-/* Dark variants for chips */
+
 [data-theme="dark"] .chip{background:var(--card);border-color:var(--border)}
 [data-theme="dark"] .chip span{background-image:none !important;color:var(--fg)}
 [data-theme="dark"] .chip.selected{background:linear-gradient(135deg,var(--grad-start),var(--grad-end));color:var(--primary-contrast)}
 [data-theme="dark"] .chip.selected span{color:var(--primary-contrast) !important}
 [data-theme="dark"] .chip:hover{box-shadow:0 2px 10px rgba(0,0,0,.25)}
-/* Responsive header & navigation */
+
 .header-inner{position:relative}
 @media (max-width: 768px){
   .menu-toggle{display:inline-block}

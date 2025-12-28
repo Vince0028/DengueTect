@@ -40,7 +40,7 @@ export default function SymptomCheckerPage() {
     if (currentStep < totalSteps) {
       setCurrentStep((prev) => prev + 1)
     } else {
-      // Complete assessment
+      
       router.push("/risk-assessment")
     }
   }
@@ -68,7 +68,7 @@ export default function SymptomCheckerPage() {
 
       <main className="container mx-auto px-4 py-6 max-w-md">
         <div className="space-y-6">
-          {/* Progress */}
+          {}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
@@ -79,7 +79,7 @@ export default function SymptomCheckerPage() {
             <Progress value={progress} className="h-2" />
           </div>
 
-          {/* Current Question */}
+          {}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Are you experiencing this symptom?</CardTitle>
@@ -99,7 +99,7 @@ export default function SymptomCheckerPage() {
                 </label>
               </div>
 
-              {/* Navigation */}
+              {}
               <div className="flex space-x-3">
                 <Button
                   variant="outline"
@@ -118,7 +118,7 @@ export default function SymptomCheckerPage() {
             </CardContent>
           </Card>
 
-          {/* Selected Symptoms Summary */}
+          {}
           {selectedSymptoms.length > 0 && (
             <Card>
               <CardHeader>

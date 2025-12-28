@@ -18,7 +18,7 @@ export function LoginForm() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    // Simple demo login - in real app this would validate credentials
+    
     if (email && password) {
       router.push("/dashboard")
     }

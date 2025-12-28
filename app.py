@@ -133,7 +133,7 @@ def _logit(p):
 def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=None):
     s = set(symptoms_list or [])
 
-    # Map inputs (booleans 0/1)
+    
     x = {
         'petechiae': 1 if 'petechiae' in s else 0,
         'retro_ocular_pain': 1 if 'retro-orbital-pain' in s else 0,
@@ -141,14 +141,14 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         'gingival_bleeding': 1 if 'gingival-bleeding' in s or 'bleeding-gums-nose' in s else 0,
         'epistaxis': 1 if 'epistaxis' in s or 'bleeding-gums-nose' in s else 0,
     def landing_page():
-        # If already authenticated send user to dashboard
+        
         if session.get('logged_in'):
             return redirect(url_for('dashboard'))
-        # Serve the built React landing page (run `npm run build` inside `landing_page` first)
+        
         index_path = os.path.join(dist_dir, 'index.html')
         if os.path.exists(index_path):
             return send_from_directory(dist_dir, 'index.html')
-        # Fallback: show existing login page if build not yet performed
+        
         return render_template('index.html', hide_nav=True)
         'intercept': 0.694,
         'petechiae': 0.718,
@@ -158,7 +158,7 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
         'skin_paleness': -0.535,
     }
     def login_required(f):
-    # Linear predictor using development (original) model coefficients
+    
     y_dev = (
         coeffs['intercept']
         + coeffs['petechiae'] * x['petechiae']
@@ -169,25 +169,25 @@ def _compute_dengue_probability_from_symptoms(symptoms_list, target_prevalence=N
     )
     p_dev = 1.0 / (1.0 + math.exp(-y_dev))
 
-    # Recalibrate intercept to target pretest prevalence (calibration-in-the-large)
-    # Development dataset prevalence approximately 71% (390/548 positive) per Fernández et al. (2016)
-    # Ref: https://pmc.ncbi.nlm.nih.gov/articles/PMC5120437/ (Results)
+    
+    
+    
     dev_prev = 0.71
     offset = 0.0
     pi0 = None
     if isinstance(target_prevalence, (int, float)):
-        # Clamp to (0,1)
+        
         pi0 = max(1e-6, min(1.0 - 1e-6, float(target_prevalence)))
         offset = _logit(pi0) - _logit(dev_prev)
 
     y = y_dev + offset
     p = 1.0 / (1.0 + math.exp(-y))
 
-    # Model performance as reported (for transparency)
+    
     model_info = {
-        'auc': 0.663,  # 95% CI 0.616–0.710 (Fernández et al., 2016)
+        'auc': 0.663,  
         'auc_ci': (0.616, 0.710),
-        # Reported overall sensitivity and specificity for the model
+        
         'reported_sensitivity': 0.862,
         'reported_specificity': 0.27,
         'explored_threshold': 0.60,
@@ -342,7 +342,7 @@ def login_required(f):
 
 def _compute_display_risk(prob, symptoms):
     s = set(symptoms or [])
-    # Base on probability
+    
     if prob >= 0.60:
         base = 'high'
     elif prob >= 0.30:
@@ -359,7 +359,7 @@ def _compute_display_risk(prob, symptoms):
         return 'high'
     if wcount == 1 and base == 'low':
         return 'moderate'
-    # Core symptom burden (CDC common features)
+    
     core = {
         'fever-high', 'severe-headache', 'retro-orbital-pain', 'myalgia', 'arthralgia', 'rash', 'nausea-vomit'
     }
@@ -385,8 +385,8 @@ def _compute_clinical_probability(symptoms, base_prev):
     rcnt = len(s.intersection(resp_abs))
     wcount = len(s.intersection(warning))
 
-    # Logistic mapping: start at base_prev; each cluster increases log-odds
-    # Chosen weights to provide intuitive monotonic growth
+    
+    
     b0 = _logit(max(1e-6, min(1-1e-6, base_prev)))
     y = b0 + 0.35 * ccount + 0.40 * rcnt + 0.90 * wcount
     p = 1.0 / (1.0 + math.exp(-y))
@@ -469,7 +469,7 @@ def register():
             return redirect(url_for('dashboard'))
         prefill = (request.args.get('email') or '').strip().lower()
         return render_template('register.html', hide_nav=True, email=prefill)
-    # POST
+    
     email = (request.form.get('email') or '').strip().lower()
     password = request.form.get('password') or ''
     confirm = request.form.get('confirm') or ''
@@ -541,7 +541,7 @@ def _analyze_image_bytes(image_bytes, roi=None):
     if Image is None:
         raise RuntimeError('Pillow not installed')
     im = Image.open(io.BytesIO(image_bytes)).convert('RGB')
-    # Downscale for performance while keeping aspect
+    
     max_w = 200
     w0, h0 = im.size
     if w0 > max_w:
@@ -550,7 +550,7 @@ def _analyze_image_bytes(image_bytes, roi=None):
     w, h = im.size
 
     px = im.load()
-    # ROI to central box
+    
     cx0 = int(w * 0.20); cx1 = int(w * 0.80)
     cy0 = int(h * 0.20); cy1 = int(h * 0.80)
     if isinstance(roi, dict) and 'cx' in roi and 'cy' in roi:
@@ -578,11 +578,11 @@ def _analyze_image_bytes(image_bytes, roi=None):
             g = g8 / 255.0
             b = b8 / 255.0
             h_deg, s, v = _rgb_to_hsv_float(r, g, b)
-            # ignore dark/low-sat; do not add to denominator
+            
             if v < 0.25 or s < 0.18:
                 continue
 
-            # thresholds aligned with client
+            
             isRedHSV = (s >= 0.24 and v >= 0.30) and (h_deg <= 15 or h_deg >= 345)
             isYellowHSV = (s >= 0.22 and v >= 0.45) and (35 <= h_deg <= 70)
             isRedRGB = (r >= 0.45) and ((r - max(g, b)) >= 0.15) and (r / (g + 1e-6) >= 1.25) and (r / (b + 1e-6) >= 1.30)
@@ -636,7 +636,7 @@ def _analyze_image_bytes(image_bytes, roi=None):
         'strongRed': strongRed, 'strongRedC': strongRedC,
     }
 
-    # Decide label
+    
     roiPresent = isinstance(roi, dict) and 'cx' in roi
     rFrac = (red / total) if total else 0.0
     yFrac = (yellow / total) if total else 0.0
@@ -792,9 +792,9 @@ def risk_assessment():
 
     bite_adjustment = 0.0
     if bite_label == 'red':
-        bite_adjustment = 12.0  # stronger boost for red/pink area
+        bite_adjustment = 12.0  
     elif bite_label == 'yellow':
-        bite_adjustment = 5.0   # mild boost for yellowish area
+        bite_adjustment = 5.0   
 
     enhanced_percentage_val = float(enhanced.get('percentage', prob_pct))
     enhanced_percentage_val = min(100.0, round(enhanced_percentage_val + bite_adjustment, 1))
@@ -918,7 +918,7 @@ def profile():
                         pass
             _save_db(db)
         return redirect(url_for('profile'))
-    # GET
+    
     email = session.get('email') or (user.get('email') if user else '')
     prof = user.get('profile', {}) if user else {}
     phone = prof.get('phone', '')
@@ -949,10 +949,10 @@ def update_prevalence():
         return redirect(url_for('settings'))
     try:
         x = float(val)
-        # If looks like a percentage, convert to fraction
+        
         if x > 1.0:
             x = x / 100.0
-        # Clamp sensible bounds
+        
         x = max(0.0001, min(0.95, x))
     except Exception:
         return redirect(url_for('settings'))

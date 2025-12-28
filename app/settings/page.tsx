@@ -60,7 +60,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Notifications */}
+          {}
           <Card className="border-emerald-200 dark:border-emerald-800 dark:bg-gray-900">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center dark:text-white">
@@ -86,7 +86,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Privacy & Permissions */}
+          {}
           <Card className="border-emerald-200 dark:border-emerald-800 dark:bg-gray-900">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center dark:text-white">
@@ -125,7 +125,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Language & Region */}
+          {}
           <Card className="border-emerald-200 dark:border-emerald-800 dark:bg-gray-900">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center dark:text-white">
@@ -149,7 +149,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* About */}
+          {}
           <Card className="border-emerald-200 dark:border-emerald-800 dark:bg-gray-900">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center dark:text-white">

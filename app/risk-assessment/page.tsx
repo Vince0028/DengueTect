@@ -7,14 +7,14 @@ import { ArrowLeft, AlertTriangle, CheckCircle, XCircle, Phone, MapPin } from "l
 import Link from "next/link"
 
 export default function RiskAssessmentPage() {
-  // Mock risk calculation - in real app this would be based on symptoms and AI analysis
+  
   const riskLevels = {
     low: 10,
     moderate: 50,
     high: 85,
   }
 
-  const currentRisk = "moderate" // This would be calculated based on symptoms
+  const currentRisk = "moderate" 
   const riskPercentage = riskLevels[currentRisk]
 
   const getRiskColor = (risk: string) => {
@@ -70,7 +70,7 @@ export default function RiskAssessmentPage() {
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-md space-y-6">
-        {/* Risk Level Display */}
+        {}
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center space-x-2">
@@ -82,7 +82,7 @@ export default function RiskAssessmentPage() {
             <CardDescription>Based on your symptoms and bite analysis</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Risk Percentage Circle */}
+            {}
             <div className="flex justify-center">
               <div className="relative w-32 h-32">
                 <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 36 36">
@@ -113,7 +113,7 @@ export default function RiskAssessmentPage() {
           </CardContent>
         </Card>
 
-        {/* Risk Breakdown */}
+        {}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Risk Breakdown</CardTitle>
@@ -143,7 +143,7 @@ export default function RiskAssessmentPage() {
           </CardContent>
         </Card>
 
-        {/* Recommendations */}
+        {}
         {currentRisk !== "low" && (
           <Card>
             <CardHeader>
@@ -162,7 +162,7 @@ export default function RiskAssessmentPage() {
           </Card>
         )}
 
-        {/* Next Steps */}
+        {}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">What's Next?</CardTitle>

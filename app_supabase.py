@@ -1015,10 +1015,10 @@ def update_prevalence():
     
     try:
         x = float(val)
-        # If looks like a percentage, convert to fraction
+        
         if x > 1.0:
             x = x / 100.0
-        # Clamp sensible bounds
+        
         x = max(0.0001, min(0.95, x))
     except Exception:
         return redirect(url_for('settings'))
@@ -1113,7 +1113,7 @@ def api_symptom_combinations():
         return jsonify({
             'ok': True,
             'single_symptoms': single_symptoms,
-            'high_risk_combinations': high_risk_combos[:50],  # Limit to top 50
+            'high_risk_combinations': high_risk_combos[:50],  
             'all_symptoms_result': {
                 'percentage': all_symptoms_result['percentage'],
                 'risk_level': all_symptoms_result['risk_level'],
