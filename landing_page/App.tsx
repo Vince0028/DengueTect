@@ -2,9 +2,11 @@ import React from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Features from './components/Features';
+import HowItWorks from './components/HowItWorks';
 import InteractiveScanner from './components/InteractiveScanner';
 import StatsSection from './components/StatsSection';
 import Pricing from './components/Pricing';
+import Education from './components/Education';
 import Footer from './components/Footer';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
@@ -49,8 +51,10 @@ const App: React.FC = () => {
         <Hero />
         <StatsSection />
         <Features />
+        <HowItWorks />
         <InteractiveScanner />
         <Pricing />
+        <Education />
         <Footer />
       </div>
     </div>
