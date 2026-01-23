@@ -39,7 +39,7 @@ const Hero: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
               className="text-base md:text-lg text-slate-400 mb-8 md:mb-12 leading-relaxed max-w-lg mx-auto lg:mx-0 lg:border-l-2 border-dengue-primary/30 lg:pl-6"
             >
-              Rapid assessment technology using computer vision and clinical logic algorithms.
+              A preliminary screening tool to help assess dengue risk. Not a medical diagnosis — always consult a healthcare professional.
             </motion.p>
 
             <motion.div
@@ -149,8 +149,8 @@ const Hero: React.FC = () => {
                             <Scan className="w-4 h-4 md:w-5 md:h-5" />
                         </div>
                         <div>
-                            <div className="text-[8px] md:text-[10px] text-slate-400 uppercase tracking-wider">Confidence</div>
-                            <div className="text-sm md:text-lg font-bold text-white">98.4%</div>
+                            <div className="text-[8px] md:text-[10px] text-slate-400 uppercase tracking-wider">Status</div>
+                            <div className="text-sm md:text-lg font-bold text-white">Analyzing</div>
                         </div>
                     </div>
                 </motion.div>

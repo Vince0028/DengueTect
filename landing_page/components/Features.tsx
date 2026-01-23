@@ -34,7 +34,7 @@ const Features: React.FC = () => {
                     transition={{ delay: 0.2 }}
                     className="text-slate-400 text-base md:text-lg max-w-md"
                 >
-                    Hardware-level precision meets clinical logic. Assessing risk has never been this accessible.
+                    Simple tools to help you understand your symptoms and find nearby medical facilities.
                 </motion.p>
             </div>
             <div className="flex gap-2">
@@ -57,13 +57,13 @@ const Features: React.FC = () => {
               <div className="w-12 h-12 md:w-16 md:h-16 bg-white/5 rounded-2xl flex items-center justify-center text-white mb-6 md:mb-8 border border-white/10 shadow-xl backdrop-blur-md group-hover:scale-110 transition-transform">
                 <Scan className="w-6 h-6 md:w-8 md:h-8 text-dengue-glow" />
               </div>
-              <h3 className="text-2xl md:text-4xl font-display font-bold mb-4 md:mb-6 text-white">Bite Analysis Engine</h3>
+              <h3 className="text-2xl md:text-4xl font-display font-bold mb-4 md:mb-6 text-white">Bite Photo Upload</h3>
               <p className="text-slate-300 text-base md:text-lg leading-relaxed mb-8">
-                Computer vision algorithms analyze erythema patterns to distinguish potential vectors.
+                Upload a photo of a bite for basic visual comparison. This is for reference only — not a medical diagnosis.
               </p>
               
               <div className="flex flex-wrap gap-3">
-                {['Instant Recognition', 'Spectrum Analysis', 'Pattern Matching'].map((item, i) => (
+                {['Photo Upload', 'Visual Reference', 'Bite Tracking'].map((item, i) => (
                   <span key={i} className="px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-white/5 border border-white/5 text-xs md:text-sm text-slate-300">
                     {item}
                   </span>
@@ -97,9 +97,9 @@ const Features: React.FC = () => {
                     <Brain className="w-20 h-20 md:w-24 md:h-24 text-white" />
                 </div>
                 <div className="relative z-10 h-full flex flex-col justify-end" style={{ transform: "translateZ(20px)" }}>
-                    <h3 className="text-xl md:text-2xl font-bold mb-3 text-white">Clinical Logic</h3>
+                    <h3 className="text-xl md:text-2xl font-bold mb-3 text-white">Symptom Checker</h3>
                     <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                        Weighted algorithms based on the Fernandez et al. (2016) model.
+                        Answer simple questions about your symptoms to understand when to seek medical help.
                     </p>
                     <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-dengue-dark transition-all cursor-pointer">
                         <ChevronRight className="w-5 h-5" />

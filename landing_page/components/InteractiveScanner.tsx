@@ -37,7 +37,7 @@ const InteractiveScanner: React.FC = () => {
                 viewport={{ once: true }}
                 className="text-slate-400 max-w-xl mx-auto text-sm md:text-base"
             >
-                The interface designed for rapid assessment in emergency situations.
+                A simple interface to upload bite photos and track your symptoms.
             </motion.p>
         </div>
 
@@ -99,26 +99,26 @@ const InteractiveScanner: React.FC = () => {
                             <Activity className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
                         </div>
                         <div>
-                            <h3 className="text-white font-bold leading-tight text-sm md:text-base">High Probability</h3>
-                            <p className="text-slate-400 text-[10px] md:text-xs">Confidence: 94%</p>
+                            <h3 className="text-white font-bold leading-tight text-sm md:text-base">Analysis Complete</h3>
+                            <p className="text-slate-400 text-[10px] md:text-xs">Review suggested</p>
                         </div>
                     </div>
-                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
                  </div>
 
                  <div className="space-y-3 md:space-y-4 flex-1">
                     <div className="space-y-1">
                         <div className="flex justify-between text-[10px] md:text-xs text-slate-400">
-                            <span>Erythema Pattern</span>
-                            <span className="text-red-400">Detected</span>
+                            <span>Bite Uploaded</span>
+                            <span className="text-green-400">Received</span>
                         </div>
                         <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                            <div className="w-[94%] h-full bg-gradient-to-r from-orange-500 to-red-500" />
+                            <div className="w-full h-full bg-gradient-to-r from-green-500 to-dengue-primary" />
                         </div>
                     </div>
                     
                     <div className="p-3 bg-white/5 rounded-xl border border-white/5 text-[10px] text-slate-300 leading-relaxed hidden md:block">
-                        Pattern consistent with Aedes vector. Immediate medical consultation advised.
+                        Please consult a doctor for proper diagnosis. This is not medical advice.
                     </div>
                  </div>
 

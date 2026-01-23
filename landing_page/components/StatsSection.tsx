@@ -3,10 +3,10 @@ import { motion } from 'framer-motion';
 
 const StatsSection: React.FC = () => {
   const stats = [
-    { value: '390M', label: 'Infections Yearly' },
-    { value: '95%', label: 'Detection Accuracy' },
-    { value: '24/7', label: 'Real-time Monitoring' },
-    { value: '120+', label: 'Countries Supported' },
+    { value: '390M', label: 'Global Dengue Cases/Year' },
+    { value: '100%', label: 'Free to Use' },
+    { value: '24/7', label: 'Available Anytime' },
+    { value: 'PH', label: 'Focused Region' },
   ];
 
   return (
