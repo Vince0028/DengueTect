@@ -37,11 +37,6 @@ const Features: React.FC = () => {
                     Simple tools to help you understand your symptoms and find nearby medical facilities.
                 </motion.p>
             </div>
-            <div className="flex gap-2">
-                <div className="h-1 w-12 bg-dengue-primary rounded-full" />
-                <div className="h-1 w-4 bg-slate-700 rounded-full" />
-                <div className="h-1 w-4 bg-slate-700 rounded-full" />
-            </div>
         </div>
 
         <div className="grid md:grid-cols-12 gap-6 perspective-1000">
@@ -59,7 +54,7 @@ const Features: React.FC = () => {
               </div>
               <h3 className="text-2xl md:text-4xl font-display font-bold mb-4 md:mb-6 text-white">Bite Photo Upload</h3>
               <p className="text-slate-300 text-base md:text-lg leading-relaxed mb-8">
-                Upload a photo of a bite for basic visual comparison. This is for reference only — not a medical diagnosis.
+                Upload a photo of a bite for basic visual comparison. This is for reference only, not a medical diagnosis.
               </p>
               
               <div className="flex flex-wrap gap-3">

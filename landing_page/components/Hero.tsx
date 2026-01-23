@@ -39,7 +39,7 @@ const Hero: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
               className="text-base md:text-lg text-slate-400 mb-8 md:mb-12 leading-relaxed max-w-lg mx-auto lg:mx-0 lg:border-l-2 border-dengue-primary/30 lg:pl-6"
             >
-              A preliminary screening tool to help assess dengue risk. Not a medical diagnosis — always consult a healthcare professional.
+              A preliminary screening tool to help assess dengue risk. Not a medical diagnosis. Always consult a healthcare professional.
             </motion.p>
 
             <motion.div
