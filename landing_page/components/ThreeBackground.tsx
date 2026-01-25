@@ -302,13 +302,13 @@ function FloatingParticles() {
   const particlesRef = useRef<THREE.Group>(null);
   
   const particles = useMemo(() => {
-    return Array.from({ length: 50 }, (_, i) => ({
+    return Array.from({ length: 80 }, (_, i) => ({
       position: [
-        (Math.random() - 0.5) * 20,
-        (Math.random() - 0.5) * 20,
-        (Math.random() - 0.5) * 10 - 5
+        (Math.random() - 0.5) * 60,
+        (Math.random() - 0.5) * 50,
+        (Math.random() - 0.5) * 20 - 5
       ] as [number, number, number],
-      scale: Math.random() * 0.15 + 0.05,
+      scale: Math.random() * 0.2 + 0.08,
       speed: Math.random() * 0.5 + 0.2
     }));
   }, []);
@@ -376,11 +376,11 @@ function RandomDNAHelixes({ count = 5 }: { count?: number }) {
   const helixes = useMemo(() => {
     return Array.from({ length: count }, () => ({
       position: [
-        (Math.random() - 0.5) * 18,
-        (Math.random() - 0.5) * 14,
-        (Math.random() * -10) - 3
+        (Math.random() - 0.5) * 50,
+        (Math.random() - 0.5) * 40,
+        (Math.random() * -15) - 5
       ] as [number, number, number],
-      scale: Math.random() * 0.6 + 0.5,
+      scale: Math.random() * 0.8 + 0.6,
       rotation: [
         Math.random() * Math.PI * 2,
         Math.random() * Math.PI * 2,
@@ -410,9 +410,9 @@ function RandomDNAKnots({ count = 3 }: { count?: number }) {
   const knots = useMemo(() => {
     return Array.from({ length: count }, () => ({
       position: [
-        (Math.random() - 0.5) * 16,
-        (Math.random() - 0.5) * 12,
-        (Math.random() * -8) - 2
+        (Math.random() - 0.5) * 50,
+        (Math.random() - 0.5) * 40,
+        (Math.random() * -12) - 3
       ] as [number, number, number],
       color: colors[Math.floor(Math.random() * colors.length)]
     }));
@@ -433,11 +433,11 @@ function RandomBacteria({ count = 8 }: { count?: number }) {
   const bacteria = useMemo(() => {
     return Array.from({ length: count }, () => ({
       position: [
-        (Math.random() - 0.5) * 18,
-        (Math.random() - 0.5) * 14,
-        (Math.random() * -10) - 3
+        (Math.random() - 0.5) * 50,
+        (Math.random() - 0.5) * 40,
+        (Math.random() * -15) - 3
       ] as [number, number, number],
-      scale: Math.random() * 0.8 + 0.4,
+      scale: Math.random() * 1.2 + 0.5,
       color: colors[Math.floor(Math.random() * colors.length)]
     }));
   }, [count]);
@@ -457,11 +457,11 @@ function RandomSphericalBacteria({ count = 6 }: { count?: number }) {
   const bacteria = useMemo(() => {
     return Array.from({ length: count }, () => ({
       position: [
-        (Math.random() - 0.5) * 16,
-        (Math.random() - 0.5) * 12,
-        (Math.random() * -8) - 2
+        (Math.random() - 0.5) * 50,
+        (Math.random() - 0.5) * 40,
+        (Math.random() * -12) - 2
       ] as [number, number, number],
-      scale: Math.random() * 0.7 + 0.4,
+      scale: Math.random() * 1.0 + 0.5,
       color: colors[Math.floor(Math.random() * colors.length)]
     }));
   }, [count]);
@@ -481,11 +481,11 @@ function RandomVirusParticles({ count = 5 }: { count?: number }) {
   const particles = useMemo(() => {
     return Array.from({ length: count }, () => ({
       position: [
-        (Math.random() - 0.5) * 16,
-        (Math.random() - 0.5) * 12,
-        (Math.random() * -8) - 2
+        (Math.random() - 0.5) * 50,
+        (Math.random() - 0.5) * 40,
+        (Math.random() * -12) - 2
       ] as [number, number, number],
-      scale: Math.random() * 0.6 + 0.4,
+      scale: Math.random() * 0.9 + 0.5,
       color: colors[Math.floor(Math.random() * colors.length)]
     }));
   }, [count]);
@@ -504,32 +504,34 @@ const ThreeBackground: React.FC = () => {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
       <Canvas
-        camera={{ position: [0, 0, 10], fov: 60 }}
+        camera={{ position: [0, 0, 15], fov: 75 }}
         style={{ background: 'transparent' }}
         gl={{ alpha: true, antialias: true }}
       >
         <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1} color="#22c55e" />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#16a34a" />
+        <pointLight position={[20, 20, 10]} intensity={1} color="#22c55e" />
+        <pointLight position={[-20, -20, -10]} intensity={0.5} color="#16a34a" />
+        <pointLight position={[0, 0, 5]} intensity={0.3} color="#4ade80" />
         
         {/* Randomly positioned DNA Double Helixes */}
-        <RandomDNAHelixes count={6} />
+        <RandomDNAHelixes count={10} />
         
         {/* Randomly positioned DNA Knots */}
-        <RandomDNAKnots count={4} />
+        <RandomDNAKnots count={6} />
         
         {/* Randomly positioned Bacteria */}
-        <RandomBacteria count={10} />
+        <RandomBacteria count={15} />
         
         {/* Randomly positioned Spherical Bacteria */}
-        <RandomSphericalBacteria count={8} />
+        <RandomSphericalBacteria count={12} />
         
         {/* Randomly positioned Virus Particles */}
-        <RandomVirusParticles count={6} />
+        <RandomVirusParticles count={10} />
         
-        <GlowingOrb position={[3, 3, -2]} color="#4ade80" size={0.8} />
-        <GlowingOrb position={[-4, -3, -4]} color="#22c55e" size={1.2} />
-        <GlowingOrb position={[0, -4, -3]} color="#16a34a" size={0.6} />
+        <GlowingOrb position={[10, 8, -5]} color="#4ade80" size={1.2} />
+        <GlowingOrb position={[-12, -8, -6]} color="#22c55e" size={1.5} />
+        <GlowingOrb position={[8, -10, -4]} color="#16a34a" size={1.0} />
+        <GlowingOrb position={[-8, 10, -5]} color="#4ade80" size={1.3} />
         
         <FloatingParticles />
       </Canvas>
