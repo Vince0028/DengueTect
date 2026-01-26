@@ -47,7 +47,7 @@ const Footer: React.FC = () => {
           <div className="bg-slate-800/50 rounded-xl p-6 text-center">
             <MapPin className="w-12 h-12 text-dengue-primary mx-auto mb-3 opacity-50" />
             <p className="text-slate-400 text-sm">Hospital finder feature is available after you sign up.</p>
-            <a href="/register" className="inline-block mt-4 px-6 py-2 bg-dengue-primary text-dengue-dark rounded-lg font-semibold text-sm hover:bg-dengue-glow transition-colors">
+            <a href="https://denguetect.onrender.com/register" className="inline-block mt-4 px-6 py-2 bg-dengue-primary text-dengue-dark rounded-lg font-semibold text-sm hover:bg-dengue-glow transition-colors">
               Sign Up to Access
             </a>
           </div>

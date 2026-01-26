@@ -46,7 +46,7 @@ const Pricing: React.FC = () => {
                 </li>
               ))}
             </ul>
-            <a href="/register" className="block w-full py-3 rounded-xl bg-dengue-primary hover:bg-dengue-glow text-dengue-dark font-semibold transition-colors text-center">
+            <a href="https://denguetect.onrender.com/register" className="block w-full py-3 rounded-xl bg-dengue-primary hover:bg-dengue-glow text-dengue-dark font-semibold transition-colors text-center">
               Get Started Free
             </a>
           </motion.div>

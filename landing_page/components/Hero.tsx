@@ -48,7 +48,7 @@ const Hero: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
-              <a href="/register" className="group relative bg-white text-dengue-dark px-8 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] transition-all duration-300">
+              <a href="https://denguetect.onrender.com/register" className="group relative bg-white text-dengue-dark px-8 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] transition-all duration-300">
                 <span className="relative z-10 flex items-center gap-2">
                   Start Assessment
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

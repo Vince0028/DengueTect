@@ -56,10 +56,10 @@ const Navbar: React.FC = () => {
 
           {}
           <div className="hidden md:flex items-center gap-4">
-            <a href="/login" className="text-sm font-semibold text-slate-300 hover:text-white transition-colors">
+            <a href="https://denguetect.onrender.com/" className="text-sm font-semibold text-slate-300 hover:text-white transition-colors">
               Login
             </a>
-            <a href="/register" className="group relative px-6 py-2.5 rounded-full bg-gradient-to-r from-dengue-primary to-dengue-glow text-dengue-dark font-bold text-sm overflow-hidden hover:shadow-[0_0_20px_rgba(74,222,128,0.4)] transition-all">
+            <a href="https://denguetect.onrender.com/register" className="group relative px-6 py-2.5 rounded-full bg-gradient-to-r from-dengue-primary to-dengue-glow text-dengue-dark font-bold text-sm overflow-hidden hover:shadow-[0_0_20px_rgba(74,222,128,0.4)] transition-all">
               <span className="relative z-10 group-hover:text-white transition-colors">Sign Up Now</span>
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             </a>
@@ -93,8 +93,8 @@ const Navbar: React.FC = () => {
                 </a>
               ))}
               <hr className="border-white/10 my-4" />
-               <a href="/login" className="text-xl font-semibold text-white">Login</a>
-               <a href="/register" className="bg-dengue-primary text-white py-4 rounded-xl font-bold text-xl shadow-lg shadow-dengue-primary/20">
+               <a href="https://denguetect.onrender.com/" className="text-xl font-semibold text-white">Login</a>
+               <a href="https://denguetect.onrender.com/register" className="bg-dengue-primary text-white py-4 rounded-xl font-bold text-xl shadow-lg shadow-dengue-primary/20">
                  Sign Up Now
                </a>
             </div>
