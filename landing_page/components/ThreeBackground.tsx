@@ -297,7 +297,7 @@ function DNAHelix({ position, color }: { position: [number, number, number]; col
   );
 }
 
-// Floating spheres representing cells/particles
+
 function FloatingParticles() {
   const particlesRef = useRef<THREE.Group>(null);
   
