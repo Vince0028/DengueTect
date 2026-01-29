@@ -202,7 +202,7 @@ class HealthService(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 def get_db():
-    """Get database session"""
+
     db = SessionLocal()
     try:
         yield db
