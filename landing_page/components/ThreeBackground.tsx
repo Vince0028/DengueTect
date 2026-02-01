@@ -340,7 +340,7 @@ function FloatingParticles() {
   );
 }
 
-// Glowing orb
+
 function GlowingOrb({ position, color, size = 1 }: { position: [number, number, number]; color: string; size?: number }) {
   const meshRef = useRef<THREE.Mesh>(null);
   
